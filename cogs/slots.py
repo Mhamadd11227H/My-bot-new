@@ -59,9 +59,10 @@ TXT_NOTHING = "and won nothing... :c"
 # ═══════════════════════════════════════
 
 # هەر ڕیزێک: (ناو، ئیمۆجی، چەند ئەوەندەی شەرت، ئەگەر بە سەدی)
-# ئیمۆجییەکان لە utils.py دان (دەستکاری نەکراون)، ڕیزبەندییەکە:
-# ١) بادەمجان ٢) دڵ ٣) گێلاس ٤) دراو ٥) OwO
-# ئەگەر ئیمۆجییەک لەگەڵ ناوەکەی نەگونجا، تەنها ئیمۆجییەکان لەنێوان ڕیزەکان بگۆڕە
+# ناوەکان (eggplant, heart...) تەنها کلیلی ناوخۆیین و لە مێژووی داتابەیس هەڵدەگیرێن،
+# بۆیە مەیانگۆڕە. ئەوەی یاریزان دەیبینێت ئیمۆجییەکەیە (utils.py):
+# eggplant=E_EGGPLANT، heart=E_GRAPE، cherry=E_ORANGE، cowoncy=E_CHERRY، owo=E_DIAMOND
+# ئیمۆجی ڕیزێک بگۆڕیت، تەنها ستوونی دووەم لەو ڕیزە بگۆڕە
 SYMBOLS = [
     ("eggplant", E_EGGPLANT, 1, 20.0),
     ("heart",    E_GRAPE,    2, 20.0),
@@ -190,6 +191,10 @@ def get_jackpot():
 
 def get_last_bet(user_id):
     row = db.execute("SELECT last_bet FROM slot_stats WHERE user_id = ?", (user_id,)).fetchone()
+    return row[0] if row else 0
+
+def get_last_spin(user_id):
+    row = db.execute("SELECT last_spin FROM slot_stats WHERE user_id = ?", (user_id,)).fetchone()
     return row[0] if row else 0
 
 class SpinError(Exception):
@@ -610,7 +615,9 @@ class SlotsCog(commands.Cog):
                 return
 
             # ٢) چاوەڕێکردن (cooldown). تەنها لە یاری ڕاستەقینەدا حساب دەکرێت
-            wait = get_cfg("cooldown") - (time.time() - self.last_use.get(uid, 0))
+            # دوایین سلۆت لە داتابەیسیش هەیە، بۆیە دوای ڕیستارتی بوت cooldown ناسڕێتەوە
+            last = max(self.last_use.get(uid, 0), get_last_spin(uid))
+            wait = get_cfg("cooldown") - (time.time() - last)
             if wait > 0:
                 await channel.send(f"⏱️ | **{name}**، **{wait:.1f}** چرکەی تر چاوەڕێ بکە!", delete_after=4)
                 return

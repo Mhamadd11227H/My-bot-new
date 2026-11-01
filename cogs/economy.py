@@ -14,9 +14,8 @@ from utils import (
 # بەشی ١: ڕێکخستنەکان (لێرە دەستکاری بکە)
 # ═══════════════════════════════════════
 
-DAILY_BASE = 10000         # دراوی ڕۆژانە (ڕۆژی یەکەم)
-DAILY_STREAK_BONUS = 50  # زیادەی هەر ڕۆژێکی بەردەوام
-DAILY_MAX = 20000         # زۆرترین دراوی ڕۆژانە
+DAILY_MIN = 10000         # کەمترین دراوی ڕۆژانە
+DAILY_MAX = 20000         # زۆرترین دراوی ڕۆژانە (هەر جارێک ژمارەیەکی هەڕەمەکی لەنێوانیان)
 DAILY_COOLDOWN = 24 * 60 * 60  # ٢٤ کاتژمێر (بە چرکە)
 
 # سنووری شەرت و چاوەڕێکردن بۆ coinflip (سلۆت ڕێکخستنی خۆی هەیە)
@@ -71,7 +70,7 @@ class Economy(commands.Cog):
         if now - last > DAILY_COOLDOWN * 2:
             streak = 0
         streak += 1
-        amount = min(DAILY_BASE + DAILY_STREAK_BONUS * (streak - 1), DAILY_MAX)
+        amount = random.SystemRandom().randint(DAILY_MIN, DAILY_MAX)
 
         db.execute(
             "UPDATE users SET coins = coins + ?, last_daily = ?, streak = ? WHERE user_id = ?",
