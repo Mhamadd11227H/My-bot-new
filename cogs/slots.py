@@ -22,7 +22,7 @@ DAILY_COOLDOWN = 24 * 60 * 60  # ٢٤ کاتژمێر (بە چرکە)
 
 MAX_BET = 50_000        # زۆرترین شەرت لە یەک جار (بۆ هەموو یارییەکان)
 COOLDOWN = 8            # چەند چرکە چاوەڕێ بکەیت لەنێوان دوو یاری
-SPIN_TIME = 3           # چەند چرکە سلۆت دەسووڕێتەوە پێش پیشاندانی ئەنجام
+SPIN_STEP = 1           # چەند چرکە لەنێوان هەر هێمایەک کە دەوەستێت (چەپ، ڕاست، ناوەڕاست)
 
 # ئەگەری بردنەوە لە سلۆت (٠.٦٠ = ٦٠٪). بردنەوە تەنها بە ٣ هێمای وەک یەک دەبێت.
 # ئاگاداربە: لەگەڵ ژمارەکانی خوارەوە، ٠.٦٠ واتە یاریزان لە ناوەندیدا
@@ -183,12 +183,13 @@ class Gambling(commands.Cog):
             return None
         return amount
 
-    # !cash: بڕی دراوەکەت پیشان دەدات
+    # !cash: بڕی دراوەکەت پیشان دەدات (بە شێوازی OwO)
     @commands.command(name="cash", aliases=["bal", "money", "دراو"])
     async def cash(self, ctx):
         coins, _, _ = get_user(ctx.author.id)
         name = discord.utils.escape_markdown(ctx.author.display_name)
-        await ctx.send(f"💰 | **{name}**، ئێستا **{coins:,} {CURRENCY}**ت هەیە!")
+        # ڕێک وەک OwO: ئیمۆجی | ناو، you currently have (ژمارە بە ژێرهێڵ و ئەستوور)
+        await ctx.send(f"{CASH_EMOJI} | **{name}**, you currently have __**{coins:,} {CURRENCY}!**__")
 
     # !daily: دراوی ڕۆژانە. بەردەوامبوون پاداشتی زیاتر دەدات
     @commands.command(name="daily")
@@ -251,9 +252,18 @@ class Gambling(commands.Cog):
 
         # ٤) ئانیمەیشن: سێ هێمای سووڕاو، پاشان ئەنجامەکە (وەک OwO)
         try:
-            msg = await ctx.send(slots_text([SPIN_EMOJI] * 3, name, amount))
-            await asyncio.sleep(SPIN_TIME)
-            await msg.edit(content=slots_text(cells, name, amount, winnings))
+            left, mid, right = cells
+            spin = SPIN_EMOJI
+            msg = await ctx.send(slots_text([spin, spin, spin], name, amount))
+            await asyncio.sleep(SPIN_STEP)
+            # یەکەم: ئەوەی لای چەپ دەوەستێت
+            await msg.edit(content=slots_text([left, spin, spin], name, amount))
+            await asyncio.sleep(SPIN_STEP)
+            # دووەم: ئەوەی لای ڕاست
+            await msg.edit(content=slots_text([left, spin, right], name, amount))
+            await asyncio.sleep(SPIN_STEP)
+            # کۆتایی: ئەوەی ناوەڕاست + ئەنجامەکە
+            await msg.edit(content=slots_text([left, mid, right], name, amount, winnings))
         except discord.HTTPException:
             pass  # ئەگەر نامەکە سڕایەوە، کێشە نییە (دراوەکان پێشتر هەژمار کراون)
 
@@ -304,3 +314,4 @@ class Gambling(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Gambling(bot))
+    
