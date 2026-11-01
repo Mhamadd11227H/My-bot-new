@@ -12,9 +12,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f"بوت ئۆنلاین بوو: {bot.user}")
 
-@bot.command(name="سڵاو")
+@bot.command(name="سلاو")
 async def hello(ctx):
-    await ctx.send(f"سڵاو {ctx.author.mention}! 👋")
+    await ctx.send(f"سلاو {ctx.author.mention}! 👋")
 
 @bot.command()
 async def ping(ctx):
