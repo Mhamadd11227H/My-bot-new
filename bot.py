@@ -36,7 +36,8 @@ AUTO_ROLE_NAME = "Member"
 # await bot.load_extension("cogs.ناوی_فایل")
 async def setup_hook():
     await bot.load_extension("cogs.help")
-    await bot.load_extension("cogs.slots")  # یاری سلۆت و دراو
+    await bot.load_extension("cogs.economy")  # دراو: cash, daily, coinflip
+    await bot.load_extension("cogs.slots")    # یاری سلۆت
 
 bot.setup_hook = setup_hook
 
