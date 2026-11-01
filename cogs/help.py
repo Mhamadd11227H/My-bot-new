@@ -64,13 +64,15 @@ HELP_CATEGORIES = {
     "game": {
         "emoji": EMOJI["game"],
         "name": "یاری",
-        "desc": "دراو کۆبکەرەوە و سلۆت یاری بکە",
+        "desc": "Z کۆبکەرەوە و سلۆت و کۆین فلیپ یاری بکە",
         "color": 0xF1C40F,  # زەرد
         "commands": [
-            ("!daily", "دراوی ڕۆژانە وەربگرە"),
-            ("!cash", "بڕی دراوەکەت پیشان دەدات"),
+            ("!daily", "Z ی ڕۆژانە وەربگرە"),
+            ("!cash", "باڵانسی Z ی خۆت پیشان دەدات"),
             ("!slots 100", "سلۆت یاری بکە بە شەرتی 100"),
             ("!slots all", "هەموو دراوەکانت شەرت بکە"),
+            ("!coinflip 100 heads", "سەر یان پشت (heads / tails)"),
+            ("!coinflip 100 h", "سەر یان پشت (h = سەر، t = پشت)"),
         ],
     },
     "mod": {
@@ -212,4 +214,3 @@ class HelpCog(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(HelpCog(bot))
-    
