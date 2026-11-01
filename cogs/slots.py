@@ -6,34 +6,51 @@ import time
 
 import discord
 from discord.ext import commands
-from utils import PREFIX
+from utils import PREFIX, BOT_NAME
 
 # ═══════════════════════════════════════
 # بەشی ١: ڕێکخستنەکان (لێرە دەستکاری بکە)
 # ═══════════════════════════════════════
 
-COIN = "💰"            # نیشانەی دراو. دەتوانیت بیگۆڕیت بە ئیمۆجی جوڵاو: "<a:ناو:ئایدی>"
-SPIN = "🎰"            # ئەو نیشانەیەی لە کاتی سووڕانەوە دەردەکەوێت
+CURRENCY = "Z"          # ناوی دراو (لە هەموو نامەکان دەردەکەوێت)
 
-START_COINS = 500      # دراوی یەکەم جار کە کەسێک دەست پێ دەکات
-DAILY_BASE = 250       # دراوی ڕۆژانە (ڕۆژی یەکەم)
-DAILY_STREAK_BONUS = 50  # زیادەی هەر ڕۆژێکی بەردەوام
-DAILY_MAX = 5000       # زۆرترین دراوی ڕۆژانە
+START_BALANCE = 500     # دراوی یەکەم جار کە کەسێک دەست پێ دەکات
+DAILY_BASE = 250        # دراوی ڕۆژانە (ڕۆژی یەکەم)
+DAILY_STREAK_BONUS = 50 # زیادەی هەر ڕۆژێکی بەردەوام
+DAILY_MAX = 5000        # زۆرترین دراوی ڕۆژانە
 DAILY_COOLDOWN = 24 * 60 * 60  # ٢٤ کاتژمێر (بە چرکە)
 
-MAX_BET = 250_000      # زۆرترین شەرت لە یەک جار
-SPIN_COOLDOWN = 8      # چەند چرکە دەبێت چاوەڕێ بکەیت لەنێوان دوو جار
+MAX_BET = 50_000        # زۆرترین شەرت لە یەک جار (بۆ هەموو یارییەکان)
+COOLDOWN = 8            # چەند چرکە چاوەڕێ بکەیت لەنێوان دوو یاری
 
-# هێماکانی ماشێنەکە و ئەگەری دەرکەوتنیان
-# (ژمارەی گەورەتر = زۆرتر دەردەکەوێت)
-SYMBOLS = ["🍒", "🍋", "🍇", "🔔", "💎", "7️⃣"]
-WEIGHTS = [30, 25, 20, 13, 8, 4]
+# ئەگەری بردنەوە لە سلۆت (٠.٦٠ = ٦٠٪). بردنەوە تەنها بە ٣ هێمای وەک یەک دەبێت.
+# ئاگاداربە: لەگەڵ ژمارەکانی خوارەوە، ٠.٦٠ واتە یاریزان لە ناوەندیدا
+# لە هەر شەرتێک ٪١٥٠ دەگەڕێتەوە (دراو زۆر زیاد دەبێت).
+# بۆ ئەوەی نزیکەی ٪٩٠ بێت: WIN_CHANCE = 0.36
+WIN_CHANCE = 0.60
 
-# ئەگەر سێ هێمای وەک یەک هات، شەرتەکە چەند ئەوەندە دەبێت
-PAYOUT_3 = {"🍒": 4, "🍋": 6, "🍇": 10, "🔔": 20, "💎": 40, "7️⃣": 150}
+# ئیمۆجییەکان. ئەگەر وەک نووسین (<:emoji_9:...>) دەرکەوتن، بوتەکە لەو سێرڤەرەدا
+# نییە کە ئیمۆجییەکانی تێدایە. ئیمۆجییەکان لە سێرڤەرەکەی خۆت باربکە و ئایدییەکان بگۆڕە
+SPIN_EMOJI = "<a:emoji_72:1536441649947869234>"
 
-# ئەگەر تەنها دوو هێمای وەک یەک هات (شەرتەکەت دەگەڕێتەوە)
-PAIR_PAYOUT = 1
+E_EGGPLANT = "<:emoji_9:1535300687288737895>"
+E_GRAPE    = "<:emoji_13:1535301374252945499>"
+E_ORANGE   = "<:emoji_9:1535300678497341462>"
+E_CHERRY   = "<:emoji_12:1535301118362521681>"
+E_DIAMOND  = "<:emoji_14:1535303848963612672>"
+
+SLOT_ITEMS = [E_EGGPLANT, E_GRAPE, E_ORANGE, E_CHERRY, E_DIAMOND]
+WEIGHTS    = [35,         25,      20,       12,       8]  # ئەگەری دەرکەوتن
+
+# شەرتەکە چەند ئەوەندە دەبێت (شەرتەکەی خۆشت تێدایە)
+# نموونە: 3 = شەرتەکەت دەگەڕێتەوە + دوو ئەوەندەی شەرتەکە وەک قازانج
+MULTIPLIERS = {
+    E_EGGPLANT: 1.5,
+    E_GRAPE: 2.0,
+    E_ORANGE: 3.0,
+    E_CHERRY: 4.0,
+    E_DIAMOND: 5.0,
+}
 
 # ═══════════════════════════════════════
 # بەشی ٢: داتابەیس (هەڵگرتنی دراوی هەموو کەسێک)
@@ -57,9 +74,9 @@ def get_user(user_id):
         "SELECT coins, last_daily, streak FROM users WHERE user_id = ?", (user_id,)
     ).fetchone()
     if row is None:
-        db.execute("INSERT INTO users (user_id, coins) VALUES (?, ?)", (user_id, START_COINS))
+        db.execute("INSERT INTO users (user_id, coins) VALUES (?, ?)", (user_id, START_BALANCE))
         db.commit()
-        return START_COINS, 0.0, 0
+        return START_BALANCE, 0.0, 0
     return row
 
 # دراو زیاد یان کەم دەکات (بۆ کەمکردن ژمارەی سالب بنووسە)
@@ -69,51 +86,86 @@ def add_coins(user_id, amount):
     db.commit()
 
 # ═══════════════════════════════════════
-# بەشی ٣: بیرکاری ماشێنەکە
+# بەشی ٣: بیرکاری یارییەکان
 # ═══════════════════════════════════════
 
-# سێ هێما دەکێشێت و بڕی بردنەوە دیاری دەکات
-def spin_result(bet):
-    result = random.choices(SYMBOLS, weights=WEIGHTS, k=3)
-    a, b, c = result
-    if a == b == c:
-        mult = PAYOUT_3[a]
-    elif a == b or b == c or a == c:
-        mult = PAIR_PAYOUT
-    else:
-        mult = 0
-    return result, int(bet * mult)
+# سلۆت: ٣ هێما دەکێشێت. دەگەڕێنێتەوە (هێماکان، چەند ئەوەندە)
+# چەند ئەوەندە = 0 واتە دۆڕان
+def roll_slots():
+    if random.random() < WIN_CHANCE:
+        chosen = random.choices(SLOT_ITEMS, weights=WEIGHTS, k=1)[0]
+        return [chosen, chosen, chosen], MULTIPLIERS[chosen]
+    # دۆڕان: هەرگیز ٣ هێمای وەک یەک نابێت (دوو هێمای وەک یەکیش دۆڕانە)
+    while True:
+        cells = random.choices(SLOT_ITEMS, weights=WEIGHTS, k=3)
+        if not (cells[0] == cells[1] == cells[2]):
+            return cells, 0
 
-# شێوەی نامەکە (وەک ماشێنی سلۆت)
-def render(cells, name, bet, won=None, jackpot=False):
-    row = " ".join(cells)
-    line1 = f"`|` {row} `|`  **{name}** شەرتی {COIN} `{bet:,}` کرد"
-    if won is None:
-        line2 = "`|___________|`  ..."
-    elif won == 0:
-        line2 = "`|___________|`  و هەموو شتەکەی دۆڕاند 😢"
-    elif jackpot:
-        line2 = f"`|___________|`  و بردییەوە {COIN} `{won:,}` 🎉🎉 **JACKPOT!!**"
-    else:
-        line2 = f"`|___________|`  و بردییەوە {COIN} `{won:,}` !!"
-    return f"**`___SLOTS___`**\n{line1}\n{line2}"
+# سەر و پشت: ناوە جیاوازەکان دەکات بە یەک ناو
+SIDES = {
+    "h": "heads", "head": "heads", "heads": "heads", "سەر": "heads",
+    "t": "tails", "tail": "tails", "tails": "tails", "پشت": "tails",
+}
+SIDE_NAMES = {"heads": "سەر", "tails": "پشت"}
+
+# شێوەی کارتی سلۆت
+def board_embed(title, cells, name, bet, last_line, color):
+    left, mid, right = cells
+    description = (
+        "**` ┌───────────────┐ `**\n"
+        f"**` │ `** {left}  {mid}  {right} **` │ `**\n"
+        "**` └───────────────┘ `**\n\n"
+        f"👤 **{name}** | 💵 شەرت: **{bet:,} {CURRENCY}**\n"
+        f"{last_line}"
+    )
+    return discord.Embed(title=title, description=description, color=color)
 
 # ═══════════════════════════════════════
 # بەشی ٤: فەرمانەکان
 # ═══════════════════════════════════════
 
-class SlotsCog(commands.Cog):
+class Gambling(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.last_spin = {}   # دوایین جاری هەر کەس سلۆتی کرد
-        self.busy = set()     # ئەوانەی ئێستا سلۆت دەکەن
+        self.last_use = {}  # (یاری, کەس) -> دوایین جار
+
+    # ماوەی چاوەڕێکردن (٠ = دەتوانێت یاری بکات)
+    def cooldown_left(self, game, user_id):
+        used = self.last_use.get((game, user_id), 0)
+        return max(COOLDOWN - (time.time() - used), 0)
+
+    # بڕی شەرتەکە دەخوێنێتەوە و دەیپشکنێت. ئەگەر هەڵە بوو None دەگەڕێنێتەوە
+    async def read_bet(self, ctx, bet, coins, example):
+        name = discord.utils.escape_markdown(ctx.author.display_name)
+        if bet.lower() in ("all", "max", "هەموو"):
+            amount = min(coins, MAX_BET)
+        else:
+            try:
+                amount = int(bet.replace(",", ""))
+            except ValueError:
+                await ctx.send(f"❌ | **{name}**، بڕی شەرتەکە دەبێت ژمارە بێت! نموونە: `{PREFIX}{example}`")
+                return None
+
+        if coins <= 0:
+            await ctx.send(f"⚠️ | **{name}**، دراوت نییە! `{PREFIX}daily` بنووسە بۆ وەرگرتنی دراو.")
+            return None
+        if amount <= 0:
+            await ctx.send(f"❌ | **{name}**، بڕی شەرت دەبێت لە ٠ زیاتر بێت!")
+            return None
+        if amount > MAX_BET:
+            await ctx.send(f"⚠️ | **{name}**، زۆرترین شەرت **{MAX_BET:,} {CURRENCY}**ـە!")
+            return None
+        if amount > coins:
+            await ctx.send(f"⚠️ | **{name}**، **{amount:,} {CURRENCY}**ت نییە! (باڵانسی تۆ: `{coins:,} {CURRENCY}`)")
+            return None
+        return amount
 
     # !cash: بڕی دراوەکەت پیشان دەدات
     @commands.command(name="cash", aliases=["bal", "money", "دراو"])
     async def cash(self, ctx):
         coins, _, _ = get_user(ctx.author.id)
         name = discord.utils.escape_markdown(ctx.author.display_name)
-        await ctx.send(f"{COIN} | **{name}**، ئێستا **{coins:,}** دراوت هەیە!")
+        await ctx.send(f"💰 | **{name}**، ئێستا **{coins:,} {CURRENCY}**ت هەیە!")
 
     # !daily: دراوی ڕۆژانە. بەردەوامبوون پاداشتی زیاتر دەدات
     @commands.command(name="daily")
@@ -123,12 +175,10 @@ class SlotsCog(commands.Cog):
         coins, last, streak = get_user(uid)
         now = time.time()
 
-        # ئەگەر هێشتا ٢٤ کاتژمێر تێنەپەڕیوە
         left = last + DAILY_COOLDOWN - now
         if left > 0:
             hours, rest = divmod(int(left), 3600)
-            minutes = rest // 60
-            await ctx.send(f"⏳ | **{name}**، دەبێت **{hours}** کاتژمێر و **{minutes}** خولەک چاوەڕێ بکەیت!")
+            await ctx.send(f"⏳ | **{name}**، دەبێت **{hours}** کاتژمێر و **{rest // 60}** خولەک چاوەڕێ بکەیت!")
             return
 
         # ئەگەر زیاتر لە ٤٨ کاتژمێر تێپەڕیبێت، بەردەوامبوون دەستپێدەکاتەوە
@@ -143,69 +193,123 @@ class SlotsCog(commands.Cog):
         )
         db.commit()
         await ctx.send(
-            f"🎁 | **{name}**، {COIN} **{amount:,}** دراوی ڕۆژانەت وەرگرت!\n"
+            f"🎁 | **{name}**، **{amount:,} {CURRENCY}**ی ڕۆژانەت وەرگرت!\n"
             f"🔥 ڕۆژی **{streak}**ـەمینی بەردەوامی"
         )
 
-    # !slots 100 یان !slots all: سلۆت یاری بکە
-    @commands.command(name="slots", aliases=["slot", "s", "سلۆت"])
-    async def slots(self, ctx, bet: str = "1"):
+    # !slots 100 یان !slots all
+    @commands.command(name="slots", aliases=["slot", "sl", "s", "سلۆت"])
+    async def slots(self, ctx, bet: str = "10"):
         uid = ctx.author.id
         name = discord.utils.escape_markdown(ctx.author.display_name)
         coins, _, _ = get_user(uid)
 
-        # ١) بڕی شەرتەکە بخوێنەرەوە
-        if bet.lower() in ("all", "هەموو"):
-            amount = min(coins, MAX_BET)
+        # ١) شەرتەکە بپشکنە
+        amount = await self.read_bet(ctx, bet, coins, "slots 100")
+        if amount is None:
+            return
+
+        # ٢) چاوەڕێکردن (cooldown). تەنها لە یاری ڕاستەقینە حساب دەکرێت
+        wait = self.cooldown_left("slots", uid)
+        if wait > 0:
+            await ctx.send(f"⏱️ | **{name}**، **{wait:.1f}** چرکەی تر چاوەڕێ بکە!", delete_after=4)
+            return
+        self.last_use[("slots", uid)] = time.time()
+
+        # ٣) ئەنجامەکە دیاری بکە و دراوەکان هەرزوو بگۆڕە
+        cells, mult = roll_slots()
+        title = "🎰  SLOTS GAME  🎰"
+
+        if mult:
+            # max(...): بۆ شەرتی بچووک (وەک ١) قازانجەکە هەرگیز ٠ نەبێت
+            winnings = max(int(amount * mult), amount + 1)
+            profit = winnings - amount
+            add_coins(uid, profit)
+            color = discord.Color.from_rgb(46, 204, 113)  # سەوز
+            symbol = cells[0]
+            if symbol == E_DIAMOND:
+                title = "👑  ROYAL JACKPOT!  👑"
+                status = f"✨ **جاکپۆتی شاهانە!** بردتەوە **+{profit:,} {CURRENCY}**! {E_DIAMOND}🔥"
+            elif symbol == E_CHERRY:
+                title = f"{E_CHERRY}  MEGA WIN!  {E_CHERRY}"
+                status = f"🌟 **بردنەوەی گەورە!** بردتەوە **+{profit:,} {CURRENCY}**! {E_CHERRY}🎉"
+            else:
+                status = f"🎉 پیرۆزە! بردتەوە **+{profit:,} {CURRENCY}**! {symbol}"
         else:
-            try:
-                amount = int(bet.replace(",", ""))
-            except ValueError:
-                await ctx.send(f"🚫 | **{name}**، بڕەکە دەبێت ژمارە بێت! نموونە: `{PREFIX}slots 100`")
-                return
-
-        # ٢) پشکنینەکان
-        if amount < 1:
-            await ctx.send(f"🚫 | **{name}**، دراوت نییە! `{PREFIX}daily` بنووسە بۆ وەرگرتنی دراو.")
-            return
-        if amount > MAX_BET:
-            await ctx.send(f"🚫 | **{name}**، زۆرترین شەرت {COIN} **{MAX_BET:,}**ـە!")
-            return
-        if amount > coins:
-            await ctx.send(f"🚫 | **{name}**، دراوی پێویستت نییە! ئێستا **{coins:,}**ت هەیە.")
-            return
-
-        # ٣) چاوەڕێ (cooldown) بۆ ئەوەی کەس سپام نەکات
-        now = time.time()
-        wait = SPIN_COOLDOWN - (now - self.last_spin.get(uid, 0))
-        if uid in self.busy or wait > 0:
-            await ctx.send(f"⏳ | **{name}**، کەمێکی تر چاوەڕێ بکە!", delete_after=4)
-            return
-
-        self.busy.add(uid)
-        self.last_spin[uid] = now
-        try:
-            # ٤) سەرەتا شەرتەکە دەکەمێتەوە، پاشان بردنەوە (ئەگەر هەبێت) دەدرێتەوە
             add_coins(uid, -amount)
-            result, won = spin_result(amount)
-            if won:
-                add_coins(uid, won)
-            jackpot = result[0] == result[1] == result[2] == "7️⃣"
+            color = discord.Color.from_rgb(231, 76, 60)  # سوور
+            status = f"💔 بەداخەوە! **{amount:,} {CURRENCY}**ت دۆڕاند... :c"
 
-            # ٥) ئانیمەیشنی سووڕانەوە: هێماکان یەک بە یەک دەردەکەون
-            try:
-                msg = await ctx.send(render([SPIN, SPIN, SPIN], name, amount))
-                await asyncio.sleep(1)
-                await msg.edit(content=render([result[0], SPIN, SPIN], name, amount))
-                await asyncio.sleep(1)
-                await msg.edit(content=render([result[0], result[1], SPIN], name, amount))
-                await asyncio.sleep(1)
-                await msg.edit(content=render(result, name, amount, won, jackpot))
-            except discord.HTTPException:
-                pass  # ئەگەر نامەکە سڕایەوە، کێشە نییە (دراوەکان پێشتر هەژمار کراون)
-        finally:
-            self.busy.discard(uid)
+        balance = get_user(uid)[0]
+
+        # ٤) ئانیمەیشن: هێماکان یەک بە یەک دەردەکەون
+        spinning = "🔄 *دەسووڕێتەوە...*"
+        try:
+            msg = await ctx.send(embed=board_embed(
+                title, [SPIN_EMOJI, SPIN_EMOJI, SPIN_EMOJI], name, amount, spinning, discord.Color.gold()))
+            await asyncio.sleep(0.5)
+            await msg.edit(embed=board_embed(
+                title, [cells[0], SPIN_EMOJI, SPIN_EMOJI], name, amount, spinning, discord.Color.gold()))
+            await asyncio.sleep(0.5)
+            await msg.edit(embed=board_embed(
+                title, [cells[0], SPIN_EMOJI, cells[2]], name, amount, spinning, discord.Color.gold()))
+            await asyncio.sleep(0.5)
+            final = board_embed(
+                title, cells, name, amount,
+                f"📊 {status}\n💳 باڵانس: **{balance:,} {CURRENCY}**", color)
+            final.set_footer(text=f"{BOT_NAME} • {CURRENCY} Economy", icon_url=ctx.author.display_avatar.url)
+            await msg.edit(embed=final)
+        except discord.HTTPException:
+            pass  # ئەگەر نامەکە سڕایەوە، کێشە نییە (دراوەکان پێشتر هەژمار کراون)
+
+    # !coinflip 100 heads  (یان: !cf 100 پشت)
+    @commands.command(name="coinflip", aliases=["cf", "flip", "coin"])
+    async def coinflip(self, ctx, bet: str = "10", choice: str = None):
+        uid = ctx.author.id
+        name = discord.utils.escape_markdown(ctx.author.display_name)
+        coins, _, _ = get_user(uid)
+
+        # ئەگەر کەسەکە سەر/پشتی پێش ژمارە نووسی (!cf heads 100)، شوێنیان دەگۆڕین
+        if bet.lower() in SIDES:
+            bet, choice = (choice if choice else "10"), bet
+
+        # سەر یان پشت (ئەگەر نەنووسرابوو: سەر)
+        side = SIDES.get((choice or "heads").lower())
+        if side is None:
+            await ctx.send(f"❌ | **{name}**، تەنها `heads` (سەر) یان `tails` (پشت) بنووسە! نموونە: `{PREFIX}cf 100 heads`")
+            return
+
+        amount = await self.read_bet(ctx, bet, coins, "cf 100 heads")
+        if amount is None:
+            return
+
+        wait = self.cooldown_left("coinflip", uid)
+        if wait > 0:
+            await ctx.send(f"⏱️ | **{name}**، **{wait:.1f}** چرکەی تر چاوەڕێ بکە!", delete_after=4)
+            return
+        self.last_use[("coinflip", uid)] = time.time()
+
+        outcome = random.choice(["heads", "tails"])
+        won = side == outcome
+        add_coins(uid, amount if won else -amount)
+        balance = get_user(uid)[0]
+
+        head_line = f"🪙 | **{name}** شەرتی **{amount:,} {CURRENCY}** کرد و **{SIDE_NAMES[side]}**ی هەڵبژارد"
+        if won:
+            result = f"بردتەوە **+{amount:,} {CURRENCY}**! 🎉"
+        else:
+            result = "هەموو شتەکەت دۆڕاند... :c 💸"
+
+        try:
+            msg = await ctx.send(f"{head_line}\nدراوەکە دەسووڕێتەوە... {SPIN_EMOJI}")
+            await asyncio.sleep(1.0)
+            await msg.edit(content=(
+                f"{head_line}\nدراوەکە کەوتە سەر **{SIDE_NAMES[outcome]}** و {result}\n"
+                f"💳 باڵانس: **{balance:,} {CURRENCY}**"
+            ))
+        except discord.HTTPException:
+            pass
 
 async def setup(bot):
-    await bot.add_cog(SlotsCog(bot))
-      
+    await bot.add_cog(Gambling(bot))
+    
