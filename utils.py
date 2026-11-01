@@ -3,6 +3,10 @@ import discord
 # ناوی بوتەکە (لە فووتەری کارتەکان)
 BOT_NAME = "Test bot"
 
+# هێمای فەرمانەکان. تەنها لێرە بیگۆڕە، لە هەموو شوێنێک دەگۆڕێت
+# نموونە: "z" یان "!z"
+PREFIX = "z"
+
 # ڕەنگەکان. دەتوانیت کۆدی هێکس بگۆڕیت
 MAIN = 0x5865F2      # شین (زانیاری)
 SUCCESS = 0x2ECC71   # سەوز (سەرکەوتن)
@@ -25,3 +29,4 @@ def make_embed(title, description=None, color=MAIN, ctx=None):
     else:
         embed.set_footer(text=BOT_NAME)
     return embed
+    
