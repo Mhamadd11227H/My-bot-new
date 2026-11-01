@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils import make_embed, BOT_NAME
+from utils import make_embed, BOT_NAME, PREFIX
 
 # ═══════════════════════════════════════
 # بەشی ١: ئیمۆجییەکان (لێرە دەستکاری بکە)
@@ -126,7 +126,7 @@ def category_embed(ctx, key):
     )
     # هەر فەرمانێک: ناو + ڕوونکردنەوە بە شێوەی quote
     lines = "\n\n".join(
-        f"{EMOJI['arrow']} **`{cmd}`**\n> {text}" for cmd, text in c["commands"]
+        f"{EMOJI['arrow']} **`{cmd.replace('!', PREFIX, 1)}`**\n> {text}" for cmd, text in c["commands"]
     )
     embed.add_field(name="فەرمانەکان", value=lines, inline=False)
     embed.set_thumbnail(url=ctx.bot.user.display_avatar.url)
@@ -155,7 +155,7 @@ class HelpView(discord.ui.View):
     async def interaction_check(self, interaction):
         if interaction.user.id != self.ctx.author.id:
             await interaction.response.send_message(
-                "❌ ئەم مینیوەیە بۆ کەسێکی ترە. خۆت `!help` بنووسە.", ephemeral=True
+                f"❌ ئەم مینیوەیە بۆ کەسێکی ترە. خۆت `{PREFIX}help` بنووسە.", ephemeral=True
             )
             return False
         return True
@@ -199,3 +199,4 @@ class HelpCog(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(HelpCog(bot))
+    
