@@ -22,6 +22,7 @@ bot = commands.Bot(
     intents=intents,
     help_command=None,
     strip_after_prefix=True,
+    case_insensitive=True,  # zPing و zping هەردووکیان کار دەکەن
 )
 
 # ناوی ئەو ڕۆڵەی بە ئەندامی نوێ دەدرێت (دەبێت وەک خۆی لە سێرڤەر هەبێت)
@@ -251,5 +252,8 @@ async def on_command_error(ctx, error):
 # کۆتایی: بوتەکە دەست پێ دەکات
 # ═══════════════════════════════════════
 
-bot.run(os.environ["DISCORD_TOKEN"])
-    
+if __name__ == "__main__":
+    token = os.environ.get("DISCORD_TOKEN")
+    if not token:
+        raise SystemExit("DISCORD_TOKEN نییە! تۆکنەکە لە environment variable دابنێ.")
+    bot.run(token)
