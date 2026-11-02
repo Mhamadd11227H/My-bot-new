@@ -1,3 +1,5 @@
+import os
+
 import discord
 from discord.ext import commands
 
@@ -11,7 +13,26 @@ from utils import make_embed, BOT_NAME, PREFIX, EXTRA_PREFIXES, CURRENCY
 # ئاگادار بە: لینکەکانی cdn.discordapp.com کاتیان هەیە (ex=...) و دوای ماوەیەک ناکار دەکەن.
 # چارەسەری هەمیشەیی: GIF لە GitHub باربکە و لینکی raw ی بەکاربهێنە، بۆ نموونە:
 # "https://raw.githubusercontent.com/Mhamadd11227H/My-bot-new/main/zero.gif"
-GIF_URL = "https://raw.githubusercontent.com/Mhamadd11227H/My-bot-new/main/zero.gif"
+GIF_URL = (
+    "https://cdn.discordapp.com/attachments/1535963966130622515/1537670836050202696/"
+    "zero_bot_neon_animated.gif?ex=6a81dd4f&is=6a808bcf&hm=f240b7bcd96096c6456901a297d5a99926ef47a7c37595cc65a9f9f0bcb0b960&"
+)
+
+# باشترین چارەسەر: فایلی zero.gif لەناو فۆڵدەری بوتەکە دابنێ (لەتەنیشت bot.py یان لەناو cogs)
+# بوتەکە خۆی دەیبینێتەوە و وەک فایل دەینێرێت، بۆیە هەرگیز لینکەکەی ناکوژێتەوە.
+# ئەگەر فایلەکە نەبوو، GIF_URL ی سەرەوە بەکاردێت
+def _find_gif():
+    here = os.path.dirname(os.path.abspath(__file__))
+    for folder in (here, os.path.dirname(here)):
+        path = os.path.join(folder, "zero.gif")
+        if os.path.isfile(path):
+            return path
+    return None
+
+GIF_FILE = _find_gif()
+
+def gif_source():
+    return "attachment://zero.gif" if GIF_FILE else GIF_URL
 
 # دوگمەی سێرڤەری ساپۆرت (ئەگەر نەتەوێت: None)
 SUPPORT_URL = "https://discord.gg/GK6WZbxuUK"
@@ -130,8 +151,9 @@ def home_embed(ctx, invite_url):
     embed.add_field(name="📌 فەرمان", value=f"`{total}`")
     if ctx.guild:
         embed.add_field(name="👥 ئەندامان", value=f"`{ctx.guild.member_count}`")
-    if GIF_URL:
-        embed.set_image(url=GIF_URL)
+    src = gif_source()
+    if src:
+        embed.set_image(url=src)
     return embed
 
 # کارتی هەر بەشێک
@@ -147,8 +169,9 @@ def category_embed(ctx, key):
         ctx=ctx,
     )
     embed.set_author(name=f"{BOT_NAME} • ناوەندی یارمەتی", icon_url=ctx.bot.user.display_avatar.url)
-    if GIF_URL:
-        embed.set_image(url=GIF_URL)
+    src = gif_source()
+    if src:
+        embed.set_image(url=src)
     return embed
 
 # ═══════════════════════════════════════
@@ -224,8 +247,9 @@ class HelpCog(commands.Cog):
             f"&permissions={INVITE_PERMISSIONS}&integration_type=0&scope=bot"
         )
         view = HelpView(ctx, invite_url)
-        view.message = await ctx.send(embed=home_embed(ctx, invite_url), view=view)
+        file = discord.File(GIF_FILE, filename="zero.gif") if GIF_FILE else None
+        view.message = await ctx.send(embed=home_embed(ctx, invite_url), view=view, file=file)
 
 async def setup(bot):
     await bot.add_cog(HelpCog(bot))
-    
+
