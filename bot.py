@@ -51,6 +51,7 @@ async def setup_hook():
     await bot.load_extension("cogs.help")
     await bot.load_extension("cogs.economy")  # دراو: cash, daily, coinflip
     await bot.load_extension("cogs.slots")    # یاری سلۆت
+    await bot.load_extension("cogs.owner")    # فەرمانە نهێنییەکانی خاوەن
 
 bot.setup_hook = setup_hook
 
@@ -251,8 +252,8 @@ async def on_command_error(ctx, error):
         text = "نرخێکی هەڵەت نووسیوە (بۆ نموونە ژمارە پێویستە)."
     elif isinstance(error, discord.Forbidden):
         text = "بوتەکە ڕێگەی ئەم کارەی نییە. ڕۆڵی بوتەکە دەبێت لە سەرووی ڕۆڵی ئەو کەسەوە بێت."
-    elif isinstance(error, commands.CommandNotFound):
-        return  # فەرمانی نەناسراو: هیچ ناکات
+    elif isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
+        return  # فەرمانی نەناسراو یان فەرمانی خاوەن بۆ کەسی تر: هیچ وەڵام نادرێتەوە
     else:
         print(f"هەڵە: {error}")
         text = "هەڵەیەکی چاوەڕواننەکراو ڕوویدا."
