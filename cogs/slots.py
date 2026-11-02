@@ -644,24 +644,19 @@ class SlotsCog(commands.Cog):
         finally:
             self.busy.discard(uid)
 
-    # ئانیمەیشن: چەپ دەوەستێت، پاشان ڕاست، لە کۆتاییدا ناوەڕاست
+    # ئانیمەیشن: وەک OwO. هەر سێ دەسووڕێن، چەپ دەوەستێت، پاشان ناوەڕاست و ڕاست پێکەوە،
+    # و لە کۆتاییدا نووسینی ئەنجام. هیچ نیشانەیەک نییە کە پێشوەخت بردنەوە ئاشکرا بکات
     async def animate(self, channel, author, name, amount, outcome, res):
         left, mid, right = [KEY_EMOJI[k] for k in outcome["keys"]]
         spin = SPIN_EMOJI
         special = outcome["jackpot"] or outcome["mult"] == 10
         try:
             msg = await channel.send(slots_text([spin, spin, spin], name, amount))
-            await asyncio.sleep(SPIN_STEP)
+            await asyncio.sleep(SPIN_STEP * 1.2)
             await msg.edit(content=slots_text([left, spin, spin], name, amount))
             await asyncio.sleep(SPIN_STEP)
-            await msg.edit(content=slots_text([left, spin, right], name, amount))
-            # ئەگەر چەپ و ڕاست وەک یەک بن، دەمێک چاوەڕوانی (هەیجان)
-            if left == right:
-                await asyncio.sleep(SPIN_STEP * 0.5)
-                await msg.edit(content=slots_text([left, spin, right], name, amount, "🔥 ✨ 🔥 ✨ 🔥"))
-                await asyncio.sleep(SPIN_STEP)
-            else:
-                await asyncio.sleep(SPIN_STEP)
+            await msg.edit(content=slots_text([left, mid, right], name, amount))
+            await asyncio.sleep(SPIN_STEP)
             line3, line4 = result_lines(outcome, res)
             view = None
             if SPIN_BUTTONS:
