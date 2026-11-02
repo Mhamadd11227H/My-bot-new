@@ -7,6 +7,10 @@ BOT_NAME = "Test bot"
 # نموونە: "z" یان "!z"
 PREFIX = "z"
 
+# هێماکانی تر کە بوتەکە پێیان وەڵام دەداتەوە (پیتی گەورە و بچووک جیاناکرێنەوە)
+# نموونە: zero cash، Zero cash، ZERO cash
+EXTRA_PREFIXES = ["zero"]
+
 # ڕەنگەکان. دەتوانیت کۆدی هێکس بگۆڕیت
 MAIN = 0x5865F2      # شین (زانیاری)
 SUCCESS = 0x2ECC71   # سەوز (سەرکەوتن)
@@ -67,4 +71,4 @@ def bet_error_text(err, name, min_bet, max_bet, balance, example):
         "no_last": f"❌ | **{name}**، هێشتا شەرتی پێشووت نییە بۆ `double`. بڕێک بنووسە.",
     }
     return texts.get(err, "❌ هەڵەیەک ڕوویدا.")
-    
+
