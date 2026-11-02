@@ -12,7 +12,6 @@ START_BALANCE = 500  # دراوی یەکەم جار کە کەسێک دەست پ�
 # فایلی economy.db لەناو فۆڵدەری سەرەکی بوتەکە دروست دەبێت
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "economy.db")
 db = sqlite3.connect(DB_PATH)
-db.execute("PRAGMA journal_mode=WAL")
 db.execute(
     "CREATE TABLE IF NOT EXISTS users ("
     "user_id INTEGER PRIMARY KEY, "
