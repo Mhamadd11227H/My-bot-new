@@ -121,3 +121,17 @@ def parse_bet(text, balance, min_bet, max_bet, last_bet=0):
         return None, "insufficient"
     return amount, None
   
+
+
+# پشتگیری (backup) لە داتابەیس. فایلی economy_backup.db لەتەنیشت economy.db دروست دەبێت
+# sqlite backup API بەکاردێنێت، بۆیە ئاسایشە ئەگەر بوتەکە کاریش بکات
+BACKUP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "economy_backup.db")
+
+def backup_db():
+    if db.in_transaction:
+        db.commit()
+    dst = sqlite3.connect(BACKUP_PATH)
+    try:
+        db.backup(dst)
+    finally:
+        dst.close()

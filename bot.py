@@ -1,8 +1,9 @@
 import os
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 # ڕەنگەکان و فەرمانی دروستکردنی کارتەکان لە فایلی utils.py هاتوون
+from database import backup_db
 from utils import make_embed, PREFIX, EXTRA_PREFIXES, MAIN, SUCCESS, ERROR, WARN
 
 # ═══════════════════════════════════════
@@ -47,7 +48,16 @@ AUTO_ROLE_NAME = "Member"
 # ئەم بەشە کاتێک بوتەکە دەست پێ دەکات کار دەکات
 # و فایلی help دەخوێنێتەوە. فایلی نوێت هەبوو، لێرە دێڕێکی نوێ زیاد بکە:
 # await bot.load_extension("cogs.ناوی_فایل")
+# هەر ٦ کاتژمێر جارێک پشتگیری لە داتابەیس دەکات (economy_backup.db)
+@tasks.loop(hours=6)
+async def auto_backup():
+    try:
+        backup_db()
+    except Exception as e:
+        print(f"هەڵەی backup: {e}")
+
 async def setup_hook():
+    auto_backup.start()
     await bot.load_extension("cogs.help")
     await bot.load_extension("cogs.economy")  # دراو: cash, daily, coinflip
     await bot.load_extension("cogs.slots")    # یاری سلۆت
@@ -102,10 +112,28 @@ async def ping(ctx):
 # بەشی ٥: مۆدەراسیۆن
 # ═══════════════════════════════════════
 
+# پشکنینی ڕۆڵەکان: ڕێگری دەکات لەوەی کەسێک کەسێکی بەرزتر لە خۆی دەربکات
+# دەگەڕێنێتەوە نووسینی هەڵە، یان None ئەگەر کێشە نەبوو
+def hierarchy_error(ctx, member):
+    if member.id == ctx.author.id:
+        return "ناتوانیت ئەم کارە لەسەر خۆت بکەیت."
+    if member.id == ctx.guild.owner_id:
+        return "ناتوانیت ئەم کارە لەسەر خاوەنی سێرڤەر بکەیت."
+    if ctx.author.id != ctx.guild.owner_id and member.top_role >= ctx.author.top_role:
+        return "ئەم ئەندامە ڕۆڵی لە تۆ بەرزترە یان یەکسانە، ناتوانیت."
+    if member.top_role >= ctx.guild.me.top_role:
+        return "ڕۆڵی بوتەکە دەبێت لە سەرووی ڕۆڵی ئەو کەسەوە بێت."
+    return None
+
 # !kick @کەس هۆکار: ئەندامێک دەردەکات
 @bot.command()
 @commands.has_permissions(kick_members=True)
 async def kick(ctx, member: discord.Member, *, reason="هۆکار نەنووسراوە"):
+    problem = hierarchy_error(ctx, member)
+    if problem:
+        embed = make_embed("⚠️ ناتوانرێت", problem, color=WARN, ctx=ctx)
+        await ctx.send(embed=embed, delete_after=6)
+        return
     await member.kick(reason=reason)
     embed = make_embed("👢 ئەندامێک دەرکرا", color=WARN, ctx=ctx)
     embed.set_thumbnail(url=member.display_avatar.url)
@@ -118,6 +146,11 @@ async def kick(ctx, member: discord.Member, *, reason="هۆکار نەنووسر
 @bot.command()
 @commands.has_permissions(ban_members=True)
 async def ban(ctx, member: discord.Member, *, reason="هۆکار نەنووسراوە"):
+    problem = hierarchy_error(ctx, member)
+    if problem:
+        embed = make_embed("⚠️ ناتوانرێت", problem, color=WARN, ctx=ctx)
+        await ctx.send(embed=embed, delete_after=6)
+        return
     await member.ban(reason=reason)
     embed = make_embed("🔨 ئەندامێک بلۆک کرا", color=ERROR, ctx=ctx)
     embed.set_thumbnail(url=member.display_avatar.url)
