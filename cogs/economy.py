@@ -40,6 +40,60 @@ SIDES = {
 # بەشی ٢: فەرمانەکان
 # ═══════════════════════════════════════
 
+# ═══════════════════════════════════════
+# دڵنیابوونەوە لە ناردنی دراو (دوگمە)
+# تەنها ناردەر دەتوانێت کلیک بکات. دوای ٣٠ چرکە خۆی هەڵدەوەشێتەوە
+# ═══════════════════════════════════════
+
+SEND_CONFIRM_TIMEOUT = 30
+
+class SendConfirmView(discord.ui.View):
+    def __init__(self, ctx, member, amount):
+        super().__init__(timeout=SEND_CONFIRM_TIMEOUT)
+        self.ctx, self.member, self.amount = ctx, member, amount
+        self.message = None
+        self.done = False  # ڕێگری لە دووبارە کلیککردن
+
+    async def interaction_check(self, interaction):
+        if interaction.user.id != self.ctx.author.id:
+            await interaction.response.send_message("❌ ئەم دوگمانە بۆ کەسێکی ترە.", ephemeral=True)
+            return False
+        return True
+
+    @discord.ui.button(label="دڵنیام", emoji="✅", style=discord.ButtonStyle.success)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.done:
+            return
+        self.done = True
+        self.stop()
+        name = discord.utils.escape_markdown(self.ctx.author.display_name)
+        # مامەڵەکە لێرە ئەنجام دەدرێت (ئەتۆمی). ئەگەر لەم ماوەیەدا دراوەکەت خەرج کردبێت، سەرناکەوێت
+        if transfer_coins(self.ctx.author.id, self.member.id, self.amount):
+            text = f"{CASH_EMOJI} | **{name}** sent **{self.amount:,} {CURRENCY}** to {self.member.mention}!"
+            await interaction.response.edit_message(content=text, view=None)
+        else:
+            text = f"⚠️ | **{name}**، دراوی پێویستت نییە، ناردنەکە ڕاگیرا."
+            await interaction.response.edit_message(content=text, view=None)
+
+    @discord.ui.button(label="پاشگەزبوونەوە", emoji="✖️", style=discord.ButtonStyle.danger)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.done:
+            return
+        self.done = True
+        self.stop()
+        name = discord.utils.escape_markdown(self.ctx.author.display_name)
+        await interaction.response.edit_message(content=f"❌ | **{name}**، ناردنەکە هەڵوەشێنرایەوە.", view=None)
+
+    async def on_timeout(self):
+        if self.done or not self.message:
+            return
+        self.done = True
+        name = discord.utils.escape_markdown(self.ctx.author.display_name)
+        try:
+            await self.message.edit(content=f"⏱️ | **{name}**، کاتەکە تەواو بوو، ناردنەکە هەڵوەشێنرایەوە.", view=None)
+        except discord.HTTPException:
+            pass
+
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -112,10 +166,18 @@ class Economy(commands.Cog):
         if number < 1:
             await ctx.send(f"❌ | **{name}**، بڕەکە دەبێت لانیکەم **1 {CURRENCY}** بێت! نموونە: {example}")
             return
-        if not transfer_coins(uid, member.id, number):
+        if number > coins:
             await ctx.send(f"⚠️ | **{name}**، دراوی پێویستت نییە! (باڵانسی تۆ: `{coins:,} {CURRENCY}`)")
             return
-        await ctx.send(f"{CASH_EMOJI} | **{name}** sent **{number:,} {CURRENCY}** to {member.mention}!")
+
+        # پرسیاری دڵنیابوونەوە (بێ mention، تا وەرگر ئاگادار نەکرێتەوە پێش ئەوەی تۆ دڵنیا بیت)
+        target = discord.utils.escape_markdown(member.display_name)
+        view = SendConfirmView(ctx, member, number)
+        view.message = await ctx.send(
+            f"⚠️ | **{name}**، دڵنیایت دەتەوێت **{number:,} {CURRENCY}** بنێریت بۆ **{target}**؟",
+            view=view,
+            allowed_mentions=discord.AllowedMentions.none(),
+        )
 
     # !coinflip 100 heads  (یان: !cf 100 پشت)
     @commands.command(name="coinflip", aliases=["cf", "flip", "coin"])
