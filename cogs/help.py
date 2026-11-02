@@ -3,7 +3,10 @@ import os
 import discord
 from discord.ext import commands
 
-from utils import make_embed, BOT_NAME, PREFIX, EXTRA_PREFIXES, CURRENCY
+from utils import (
+    make_embed, BOT_NAME, PREFIX, EXTRA_PREFIXES, CURRENCY,
+    E_EGGPLANT, E_GRAPE, E_ORANGE, E_CHERRY, E_DIAMOND,
+)
 
 # ═══════════════════════════════════════
 # بەشی ١: ڕێکخستنەکان (لێرە دەستکاری بکە)
@@ -52,63 +55,162 @@ CATEGORIES = {
     "general": {
         "emoji": "🌟",
         "title": "گشتی",
-        "desc": "فەرمانە سادە و بەسوودەکان",
+        "desc": "فەرمانێن سادە و بسوود",
         "color": 0x5865F2,
         "commands": [
-            ("{p} help", "ئەم مینیوەیە دەکاتەوە (`{p} h` یان `{p} یارمەتی`)"),
-            ("{p} ping", "خێرایی بوتەکە پیشان دەدات"),
-            ("{p} سڵاو", "سڵاو لە بوتەکە بکە"),
+            ("{p} help", "ئەڤ مینیۆیێ ڤەدکەت (`{p} h` یان `{p} یارمەتی`)"),
+            ("{p} ping", "خێراییا بوتی نیشان ددەت"),
+            ("{p} سڵاو", "سلاڤێ ل بوتی بکە"),
         ],
     },
     "info": {
         "emoji": "📊",
         "title": "زانیاری",
-        "desc": "زانیاری ئەندام و سێرڤەر",
+        "desc": "زانیاریێن ئەندام و سێرڤەری",
         "color": 0x9B59B6,
         "commands": [
-            ("{p} user", "زانیاری خۆت پیشان دەدات"),
-            ("{p} user @کەس", "زانیاری ئەندامێکی تر"),
-            ("{p} server", "زانیاری سێرڤەرەکە"),
+            ("{p} user", "زانیاریێن خوە نیشان ددەت"),
+            ("{p} user @کەس", "زانیاریێن ئەندامەکێ دی نیشان ددەت"),
+            ("{p} server", "زانیاریێن سێرڤەری نیشان ددەت"),
         ],
     },
     "economy": {
         "emoji": "💰",
         "title": "ئابووری و دراو",
-        "desc": f"{CURRENCY}ی خۆت ببینە، وەریبگرە و بینێرە",
+        "desc": f"{CURRENCY}ا خوە ببینە، وەربگرە و بنێرە",
         "color": 0x2ECC71,
         "commands": [
-            ("{p} cash", f"باڵانسی {CURRENCY}ی خۆت (`{{p}} bal` / `{{p}} money` / `{{p}} دراو`)"),
-            ("{p} daily", f"{CURRENCY}ی ڕۆژانە وەربگرە (هەر ٢٤ کاتژمێر جارێک)"),
-            ("{p} send @کەس <بڕ>", f"{CURRENCY} بنێرە بۆ کەسێکی تر، دوای دڵنیابوونەوە (`{{p}} give` / `{{p}} pay`)"),
-            ("{p} send @کەس all", "هەموو دراوەکانت بنێرە (`half` = نیوەی)"),
+            ("{p} cash", f"ژمارا {CURRENCY}ا تە نیشان ددەت (`{{p}} bal` / `{{p}} money` / `{{p}} دراو`)"),
+            ("{p} daily", f"{CURRENCY}ا ڕۆژانە وەربگرە، هەر ٢٤ دەمژمێران جارەکێ"),
+            ("{p} send @کەس <بڕ>", f"{CURRENCY} بۆ کەسەکێ بنێرە، پشتی دڵنیابوونێ (`{{p}} give` / `{{p}} pay`)"),
+            ("{p} send @کەس all", "هەمی دراوێن خوە بنێرە (`half` = نیڤا وان)"),
         ],
     },
     "games": {
         "emoji": "🎰",
         "title": "یاری",
-        "desc": f"سلۆت و سەر یان پشت بە {CURRENCY}",
+        "desc": "یاریێن ب دراو. یاریەکێ هەلبژێرە و یاسایێن وێ ببینە",
         "color": 0xF1C40F,
         "commands": [
-            ("{p} slots <بڕ>", "سلۆت یاری بکە (`{p} s` / `{p} slot` / `{p} سلۆت`)"),
-            ("{p} slots all", "هەموو دراوەکانت شەرت بکە (`half` = نیوەی، `double` = دوو ئەوەندەی پێشوو)"),
-            ("{p} slots stats", "ئاماری سلۆتی خۆت (`{p} slots stats @کەس` بۆ کەسێکی تر)"),
-            ("{p} slots history", "مێژووی یارییەکانت"),
-            ("{p} slots leaderboard", "لیستی پێشەنگانی سلۆت (`lb` / `top`)"),
-            ("{p} slots help", "خشتەی بردنەوە و جاکپۆت"),
-            ("{p} cf <بڕ> <heads/tails>", "سەر یان پشت (`{p} cf 100 h` = سەر، `t` = پشت. `coinflip` / `flip` / `coin` یش کار دەکەن)"),
+            ("{p} slots <بڕ>", "سلۆتێ یاری بکە (`{p} s` / `{p} slot` / `{p} سلۆت`)"),
+            ("{p} slots all", "هەمی دراوێن خوە شەرت بکە (`half` = نیڤا وان، `double` = دوو ئەوەندەیێ جارا بەری)"),
+            ("{p} slots stats", "ئاماریێ سلۆتا خوە (`{p} slots stats @کەس` بۆ کەسەکێ دی)"),
+            ("{p} slots history", "مێژوویا یاریێن تە"),
+            ("{p} slots leaderboard", "لیستا پێشەنگێن سلۆتێ (`lb` / `top`)"),
+            ("{p} slots help", "خشتەیا بردنێ و جاکپۆتێ"),
+            ("{p} cf <بڕ> <h/t>", "سەر یان پشت (`{p} cf 100 h` = سەر، `t` = پشت. `coinflip` / `flip` / `coin` ژی کار دکەن)"),
         ],
     },
     "mod": {
         "emoji": "🛡️",
         "title": "مۆدەراسیۆن",
-        "desc": "تەنها بۆ بەڕێوەبەران (ڕێگەی پێویستە)",
+        "desc": "تەنێ بۆ بەرپرسان (مۆڵەت پێدڤییە)",
         "color": 0xE74C3C,
         "commands": [
-            ("{p} kick @کەس <هۆکار>", "ئەندامێک دەردەکات"),
-            ("{p} ban @کەس <هۆکار>", "ئەندامێک بلۆک دەکات"),
-            ("{p} unban <ناو>", "بلۆکی کەسێک لادەبات"),
-            ("{p} clear <ژمارە>", "چەند نامەیەک دەسڕێتەوە (١ تا ١٠٠)"),
-            ("{p} slots config", "ڕێکخستنەکانی سلۆت بگۆڕە (ڕێگەی Manage Server)"),
+            ("{p} kick @کەس <هۆکار>", "ئەندامەکی ژ سێرڤەری دەردئێخت"),
+            ("{p} ban @کەس <هۆکار>", "ئەندامەکی بلۆک دکەت"),
+            ("{p} unban <ناڤ>", "بلۆکا کەسەکی لادبەت"),
+            ("{p} clear <ژمارە>", "چەند نامەیان ددەتە ژێبرن (١ تا ١٠٠)"),
+            ("{p} slots config", "ڕێکخستنێن سلۆتێ بگۆڕە (مۆڵەتا Manage Server)"),
+        ],
+    },
+}
+
+# ═══════════════════════════════════════
+# بەشی ٢.٥: لیستی یارییەکان (ئەو لیستەی دوای کلیککردن لە "یاری" دەردەکەوێت)
+# یاری نوێ؟ تەنها بلۆکێکی نوێ لێرە زیاد بکە، لیستەکە خۆکار نوێ دەبێتەوە
+# "sections" = لیستی (ناوی بەش، دەق). هەر دەقێک نابێت لە ١٠٠٠ پیت زیاتر بێت
+# {p} = هێمای فەرمان
+# ═══════════════════════════════════════
+_SLOT_TABLE = (
+    f"{E_EGGPLANT * 3} ── **x1** (تەنێ شەرتێ خوە وەردگریڤە) ── ٪٢٠\n"
+    f"{E_GRAPE * 3} ── **x2** ── ٪٢٠\n"
+    f"{E_ORANGE * 3} ── **x3** ── ٪٥\n"
+    f"{E_CHERRY * 3} ── **x4** ── ٪٢.٥\n"
+    f"{E_DIAMOND * 3} ── **x10** ── ٪١"
+)
+
+GAMES = {
+    "slots": {
+        "emoji": "🎰",
+        "title": "سلۆت",
+        "short": "سێ هێما دزڤڕن. ئەگەر هەر سێ وەک ئێک بن، تو دبەی!",
+        "color": 0xF1C40F,
+        "sections": [
+            (
+                "📖 چەوا دهێتە یاریکرن؟",
+                "١️⃣ بنڤیسە `{p} slots 100` (١٠٠ = بڕێ شەرتێ، دشێی بگۆڕی)\n"
+                "٢️⃣ سێ هێما دزڤڕن\n"
+                "٣️⃣ ئەگەر **هەر سێ هێمایێن وەک ئێک** هاتن، تو دبەی\n"
+                "٤️⃣ ئەگەر نە، شەرتێ تە دچیت",
+            ),
+            (
+                "⚠️ گرنگ",
+                "دوو هێمایێن وەک ئێک **تەنێ** دۆڕانە. دڤێت هەر سێ وەک ئێک بن",
+            ),
+            (
+                "💎 خشتەیا بردنێ (هێما ── چەند ئەوەندە ── ئەگەر)",
+                _SLOT_TABLE,
+            ),
+            (
+                "👑 جاکپۆت",
+                "٧️⃣٧️⃣٧️⃣ ئەگەر دەرکەڤت، **هەمی پارەیێ ناڤ جاکپۆتێ** دبەی!\n"
+                "🎯 ئەگەر: ١ ژ ٥٠٠٠\n"
+                "💵 دڤێت شەرتێ تە لانیکەم `١٠٠` بیت\n"
+                "📈 ژ هەر شەرتەکێ پارچەیەکا بچووک دچیتە ناڤ جاکپۆتێ\n"
+                "👀 بۆ دیتنا بڕێ جاکپۆتێ: `{p} slots help`",
+            ),
+            (
+                "⚡ شەرتکرنا خێرا",
+                "`{p} slots all` ── هەمی دراوێن خوە\n"
+                "`{p} slots half` ── نیڤا دراوێن خوە\n"
+                "`{p} slots double` ── دوو ئەوەندەیێ شەرتێ جارا بەری",
+            ),
+            (
+                "📊 فەرمانێن دی یێن سلۆتێ",
+                "`{p} slots stats` ── ئاماریێ تە\n"
+                "`{p} slots history` ── مێژوویا یاریێن تە\n"
+                "`{p} slots leaderboard` ── لیستا پێشەنگان\n"
+                "⏱️ ناڤبەرا دوو یاریان دڤێت چەند چرکەیەکان چاڤەڕێ بکەی",
+            ),
+        ],
+    },
+    "coinflip": {
+        "emoji": "🪙",
+        "title": "سەر یان پشت",
+        "short": "تو سەر یان پشتێ هەلدبژێری. ئەگەر ڕاست بوو، دبەی!",
+        "color": 0x3498DB,
+        "sections": [
+            (
+                "📖 چەوا دهێتە یاریکرن؟",
+                "١️⃣ بنڤیسە `{p} cf 100 h`\n"
+                "٢️⃣ `h` = سەر 🟡 ، `t` = پشت ⚪\n"
+                "٣️⃣ دراو دزڤڕیت و دەرئەنجام دهێتە نیشاندان\n"
+                "٤️⃣ ئەگەر هەلبژارتنا تە ڕاست بوو، تو دبەی",
+            ),
+            (
+                "💰 بردن و دۆڕان",
+                "✅ ئەگەر ڕاست بوو: **x2** (شەرتێ خوە دوو ئەوەندە وەردگری)\n"
+                "❌ ئەگەر خەلەت بوو: شەرتێ تە دچیت\n"
+                "🎲 ئەگەر: ٪٥٠ بۆ سەر و ٪٥٠ بۆ پشت",
+            ),
+            (
+                "✏️ ناڤێن جودا",
+                "سەر: `h` ، `head` ، `heads` ، `سەر`\n"
+                "پشت: `t` ، `tail` ، `tails` ، `پشت`\n"
+                "ئەگەر تو نەنڤیسی، خۆکار **سەر** دهێتە هەلبژارتن",
+            ),
+            (
+                "⚡ شەرتکرنا خێرا",
+                "`{p} cf all h` ── هەمی دراوێن خوە\n"
+                "`{p} cf half t` ── نیڤا دراوێن خوە",
+            ),
+            (
+                "📌 نموونە",
+                "`{p} cf 500 t` ── ٥٠٠ شەرت لسەر پشتێ\n"
+                "`{p} cf سەر 100` ── ڕیزبەندی ژی بەلاڤ نینە، هەردوو کار دکەن\n"
+                "⏱️ ناڤبەرا دوو یاریان دڤێت چەند چرکەیەکان چاڤەڕێ بکەی",
+            ),
         ],
     },
 }
@@ -174,6 +276,50 @@ def category_embed(ctx, key):
         embed.set_image(url=src)
     return embed
 
+# کارتی لیستی یارییەکان (دوای کلیک لە "یاری")
+def games_overview_embed(ctx):
+    c = CATEGORIES["games"]
+    games_list = "\n".join(
+        f"{g['emoji']} **{g['title']}** ── {g['short']}" for g in GAMES.values()
+    )
+    quick = "\n".join(
+        f"▫️ **`{render(cmd)}`** ── {render(text)}" for cmd, text in c["commands"]
+    )
+    embed = make_embed(
+        f"{c['emoji']}  {c['title']}",
+        (
+            f"> {c['desc']}\n{DIVIDER}\n"
+            f"🎮 **یاریێن هەین**\n{games_list}\n{DIVIDER}\n"
+            "👇 **یاریەکێ ژ لیستا خوارێ هەلبژێرە** بۆ دیتنا یاسا و چەوانیا یاریکرنێ\n"
+            f"{DIVIDER}\n"
+            f"📋 **هەمی فەرمانێن یاریان**\n{quick}"
+        ),
+        color=c["color"],
+        ctx=ctx,
+    )
+    embed.set_author(name=f"{BOT_NAME} • ناوەندی یارمەتی", icon_url=ctx.bot.user.display_avatar.url)
+    src = gif_source()
+    if src:
+        embed.set_image(url=src)
+    return embed
+
+# کارتی یاسای هەر یارییەک
+def game_embed(ctx, key):
+    g = GAMES[key]
+    embed = make_embed(
+        f"{g['emoji']}  {g['title']}",
+        f"> {g['short']}",
+        color=g["color"],
+        ctx=ctx,
+    )
+    for name, value in g["sections"]:
+        embed.add_field(name=name, value=render(value), inline=False)
+    embed.set_author(name=f"{BOT_NAME} • یاسای یاری", icon_url=ctx.bot.user.display_avatar.url)
+    src = gif_source()
+    if src:
+        embed.set_image(url=src)
+    return embed
+
 # ═══════════════════════════════════════
 # بەشی ٤: لیست و دوگمەکان
 # ═══════════════════════════════════════
@@ -196,8 +342,35 @@ class CategorySelect(discord.ui.Select):
         key = self.values[0]
         if key == "home":
             embed = home_embed(view.ctx, view.invite_url)
+        elif key == "games":
+            embed = games_overview_embed(view.ctx)
         else:
             embed = category_embed(view.ctx, key)
+        # لیستی یارییەکان تەنها لە بەشی "یاری" دەردەکەوێت
+        view.show_game_menu(key == "games")
+        await interaction.response.edit_message(embed=embed, view=view)
+
+# لیستی دووەم: ناوی یارییەکان (تەنها دوای کلیک لە بەشی یاری دەردەکەوێت)
+class GameSelect(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(
+                label="هەمی یاری", value="all", emoji="📋", description="گەڕان بۆ لیستا یاریان"
+            )
+        ]
+        for key, g in GAMES.items():
+            options.append(
+                discord.SelectOption(label=g["title"], value=key, emoji=g["emoji"], description=g["short"][:100])
+            )
+        super().__init__(placeholder="🎮 یاریەکێ هەلبژێرە...", min_values=1, max_values=1, options=options, row=1)
+
+    async def callback(self, interaction: discord.Interaction):
+        view = self.view
+        key = self.values[0]
+        if key == "all":
+            embed = games_overview_embed(view.ctx)
+        else:
+            embed = game_embed(view.ctx, key)
         await interaction.response.edit_message(embed=embed, view=view)
 
 class HelpView(discord.ui.View):
@@ -206,12 +379,22 @@ class HelpView(discord.ui.View):
         self.ctx = ctx
         self.invite_url = invite_url
         self.message = None
+        self.game_select = None  # لیستی یارییەکان (تەنها لە بەشی یاری)
 
         self.add_item(CategorySelect())
-        # دوگمەکانی لینک (ڕیزی دووەم)
-        self.add_item(discord.ui.Button(label="زیادکردنی بوت", url=invite_url, emoji="🤖", row=1))
+        # دوگمەکانی لینک (ڕیزی سێیەم، چونکە ڕیزی دووەم بۆ لیستی یارییەکانە)
+        self.add_item(discord.ui.Button(label="زیادکردنی بوت", url=invite_url, emoji="🤖", row=2))
         if SUPPORT_URL:
-            self.add_item(discord.ui.Button(label="سێرڤەری ساپۆرت", url=SUPPORT_URL, emoji="💬", row=1))
+            self.add_item(discord.ui.Button(label="سێرڤەری ساپۆرت", url=SUPPORT_URL, emoji="💬", row=2))
+
+    # لیستی یارییەکان پیشان بدە یان بیشارەوە
+    def show_game_menu(self, show):
+        if show and self.game_select is None:
+            self.game_select = GameSelect()
+            self.add_item(self.game_select)
+        elif not show and self.game_select is not None:
+            self.remove_item(self.game_select)
+            self.game_select = None
 
     # تەنها خاوەنی help دەتوانێت بەکاری بهێنێت
     async def interaction_check(self, interaction):
