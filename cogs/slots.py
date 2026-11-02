@@ -645,7 +645,7 @@ class SlotsCog(commands.Cog):
             self.busy.discard(uid)
 
     # ئانیمەیشن: ڕێک وەک OwO. هەر سێ دەسووڕێن، پاشان چەپ دەوەستێت، دواتر ڕاست،
-    # دواتر ناوەڕاست، و لە کۆتاییدا نووسینی ئەنجام. هیچ نیشانەیەک نییە کە بردنەوە پێشوەخت ئاشکرا بکات
+    # دواتر ناوەڕاست لەگەڵ نووسینی ئەنجام پێکەوە. هیچ نیشانەیەک نییە کە بردنەوە پێشوەخت ئاشکرا بکات
     async def animate(self, channel, author, name, amount, outcome, res):
         left, mid, right = [KEY_EMOJI[k] for k in outcome["keys"]]
         spin = SPIN_EMOJI
@@ -657,8 +657,8 @@ class SlotsCog(commands.Cog):
             await asyncio.sleep(SPIN_STEP)
             await msg.edit(content=slots_text([left, spin, right], name, amount))
             await asyncio.sleep(SPIN_STEP)
-            await msg.edit(content=slots_text([left, mid, right], name, amount))
-            await asyncio.sleep(SPIN_STEP)
+            # ناوەڕاست و نووسینی ئەنجام لە یەک edit دا دەردەکەون (دیسکۆرد سنووری edit ی هەیە،
+            # edit ی زیادە وا دەکات نووسینەکە دوا بکەوێت)
             line3, line4 = result_lines(outcome, res)
             view = None
             if SPIN_BUTTONS:
