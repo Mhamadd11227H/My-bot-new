@@ -5,7 +5,7 @@ import time
 import discord
 from discord.ext import commands
 
-from database import db, get_user, add_coins, parse_bet
+from database import db, get_user, add_coins, parse_bet, transfer_coins
 from utils import (
     PREFIX, CURRENCY, CASH_EMOJI, SPIN_EMOJI, HEADS_EMOJI, TAILS_EMOJI, bet_error_text,
 )
@@ -81,6 +81,41 @@ class Economy(commands.Cog):
             f"🎁 | **{name}**، **{amount:,} {CURRENCY}**ی ڕۆژانەت وەرگرت!\n"
             f"🔥 ڕۆژی **{streak}**ـەمینی بەردەوامی"
         )
+
+    # !send @کەس 100  (یان: !give / !pay). all و half یش کار دەکەن
+    @commands.command(name="send", aliases=["give", "pay"])
+    async def send(self, ctx, member: discord.Member, amount: str):
+        uid = ctx.author.id
+        name = discord.utils.escape_markdown(ctx.author.display_name)
+        example = f"`{PREFIX}send @کەس 100`"
+
+        if member.bot:
+            await ctx.send(f"❌ | **{name}**، ناتوانیت دراو بنێریت بۆ بوت!")
+            return
+        if member.id == uid:
+            await ctx.send(f"❌ | **{name}**، ناتوانیت دراو بنێریت بۆ خۆت!")
+            return
+
+        coins, _, _ = get_user(uid)
+        text = amount.strip().lower().replace(",", "")
+        if text in ("all", "max", "هەموو"):
+            number = coins
+        elif text in ("half", "نیوە"):
+            number = coins // 2
+        else:
+            try:
+                number = int(text)
+            except ValueError:
+                await ctx.send(f"❌ | **{name}**، بڕەکە دەبێت ژمارە بێت (یان `all` / `half`)! نموونە: {example}")
+                return
+
+        if number < 1:
+            await ctx.send(f"❌ | **{name}**، بڕەکە دەبێت لانیکەم **1 {CURRENCY}** بێت! نموونە: {example}")
+            return
+        if not transfer_coins(uid, member.id, number):
+            await ctx.send(f"⚠️ | **{name}**، دراوی پێویستت نییە! (باڵانسی تۆ: `{coins:,} {CURRENCY}`)")
+            return
+        await ctx.send(f"{CASH_EMOJI} | **{name}** sent **{number:,} {CURRENCY}** to {member.mention}!")
 
     # !coinflip 100 heads  (یان: !cf 100 پشت)
     @commands.command(name="coinflip", aliases=["cf", "flip", "coin"])
