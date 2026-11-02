@@ -11,10 +11,7 @@ from utils import make_embed, BOT_NAME, PREFIX, EXTRA_PREFIXES, CURRENCY
 # ئاگادار بە: لینکەکانی cdn.discordapp.com کاتیان هەیە (ex=...) و دوای ماوەیەک ناکار دەکەن.
 # چارەسەری هەمیشەیی: GIF لە GitHub باربکە و لینکی raw ی بەکاربهێنە، بۆ نموونە:
 # "https://raw.githubusercontent.com/Mhamadd11227H/My-bot-new/main/zero.gif"
-GIF_URL = (
-    "https://cdn.discordapp.com/attachments/1535963966130622515/1537670836050202696/"
-    "zero_bot_neon_animated.gif?ex=6a81dd4f&is=6a808bcf&hm=f240b7bcd96096c6456901a297d5a99926ef47a7c37595cc65a9f9f0bcb0b960&"
-)
+GIF_URL = "https://raw.githubusercontent.com/Mhamadd11227H/My-bot-new/main/zero.gif"
 
 # دوگمەی سێرڤەری ساپۆرت (ئەگەر نەتەوێت: None)
 SUPPORT_URL = "https://discord.gg/GK6WZbxuUK"
