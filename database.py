@@ -2,8 +2,9 @@ import os
 import sqlite3
 
 # ═══════════════════════════════════════
-# داتابەیسی ئابووری (دراوی هەموو کەسێک)
-# هەموو یارییەکان ئەم یەک داتابەیسە بەکار دەهێنن، ئابووری دووەم دروست ناکرێت
+# داتابەیسی ئابووری (zero coin ی هەموو کەسێک)
+# هەموو یارییەکان و تایبەتمەندییەکانی داهاتوو ئەم یەک داتابەیسە بەکار دەهێنن.
+# فەرمانە گشتییەکان: get_user, get_balance, add_coins, spend_coins
 # ═══════════════════════════════════════
 
 START_BALANCE = 500  # دراوی یەکەم جار کە کەسێک دەست پێ دەکات
@@ -38,6 +39,23 @@ def add_coins(user_id, amount):
     db.execute("UPDATE users SET coins = coins + ? WHERE user_id = ?", (amount, user_id))
     db.commit()
 
+# باڵانسی کەسێک دەگەڕێنێتەوە (ئەگەر نوێ بێت، دروستی دەکات)
+def get_balance(user_id):
+    return get_user(user_id)[0]
+
+# دراو دەکێشێتەوە (بۆ کڕین، یاری، خزمەتگوزاری...). ئەگەر دراوی پێویست نەبوو، هیچ ناکات
+# و False دەگەڕێنێتەوە. ئەمە یەک مامەڵەی ئەتۆمییە، بۆیە باڵانس هەرگیز سالب نابێت
+def spend_coins(user_id, amount):
+    if amount <= 0:
+        return False
+    get_user(user_id)
+    cur = db.execute(
+        "UPDATE users SET coins = coins - ? WHERE user_id = ? AND coins >= ?",
+        (amount, user_id, amount),
+    )
+    db.commit()
+    return cur.rowcount == 1
+
 # بڕی شەرت دەخوێنێتەوە و دەیپشکنێت
 # دەگەڕێنێتەوە (بڕ, هەڵە). ئەگەر هەڵە نەبوو، هەڵە = None
 # هەڵەکان: invalid, no_cash, too_low, too_high, insufficient, no_last
@@ -66,4 +84,4 @@ def parse_bet(text, balance, min_bet, max_bet, last_bet=0):
     if amount > balance:
         return None, "insufficient"
     return amount, None
-  
+
