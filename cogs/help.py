@@ -282,17 +282,12 @@ def games_overview_embed(ctx):
     games_list = "\n".join(
         f"{g['emoji']} **{g['title']}** ── {g['short']}" for g in GAMES.values()
     )
-    quick = "\n".join(
-        f"▫️ **`{render(cmd)}`** ── {render(text)}" for cmd, text in c["commands"]
-    )
     embed = make_embed(
         f"{c['emoji']}  {c['title']}",
         (
             f"> {c['desc']}\n{DIVIDER}\n"
             f"🎮 **یاریێن هەین**\n{games_list}\n{DIVIDER}\n"
-            "👇 **یاریەکێ ژ لیستا خوارێ هەلبژێرە** بۆ دیتنا یاسا و چەوانیا یاریکرنێ\n"
-            f"{DIVIDER}\n"
-            f"📋 **هەمی فەرمانێن یاریان**\n{quick}"
+            "👇 **یاریەکێ ژ لیستا خوارێ هەلبژێرە** بۆ دیتنا یاسا و چەوانیا یاریکرنێ"
         ),
         color=c["color"],
         ctx=ctx,
