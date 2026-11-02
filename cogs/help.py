@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils import make_embed, BOT_NAME, PREFIX
+from utils import make_embed, BOT_NAME, PREFIX, CURRENCY
 
 # ═══════════════════════════════════════
 # بەشی ١: ئیمۆجییەکان (لێرە دەستکاری بکە)
@@ -64,11 +64,11 @@ HELP_CATEGORIES = {
     "game": {
         "emoji": EMOJI["game"],
         "name": "یاری",
-        "desc": "Z کۆبکەرەوە و سلۆت و کۆین فلیپ یاری بکە",
+        "desc": f"{CURRENCY} کۆبکەرەوە و سلۆت و کۆین فلیپ یاری بکە",
         "color": 0xF1C40F,  # زەرد
         "commands": [
-            ("!daily", "Z ی ڕۆژانە وەربگرە"),
-            ("!cash", "باڵانسی Z ی خۆت پیشان دەدات"),
+            ("!daily", f"{CURRENCY}ی ڕۆژانە وەربگرە"),
+            ("!cash", f"باڵانسی {CURRENCY}ی خۆت پیشان دەدات"),
             ("!slots 100", "سلۆت یاری بکە بە شەرتی 100"),
             ("!slots all", "هەموو دراوەکانت شەرت بکە"),
             ("!slots half", "نیوەی دراوەکانت شەرت بکە"),
@@ -220,3 +220,4 @@ class HelpCog(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(HelpCog(bot))
+    
