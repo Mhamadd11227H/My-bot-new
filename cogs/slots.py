@@ -40,7 +40,7 @@ CONFIG_LIMITS = {
 
 SPIN_STEP = 1           # چەند چرکە لەنێوان هەر هێمایەک کە دەوەستێت (چەپ، ڕاست، ناوەڕاست)
 SPIN_BUTTONS = False    # دوگمەی خێرا (دووبارە، دوو ئەوەندە، نیوە) لەژێر ئەنجامەکە
-SHOW_DETAILS = True     # هێڵی چوارەم: چەند ئەوەندە، قازانج و باڵانس
+SHOW_DETAILS = False    # هێڵی چوارەم: چەند ئەوەندە، قازانج و باڵانس (OwO ی ڕاستەقینە نایدات)
 HISTORY_PER_PAGE = 5    # چەند یاری لە هەر لاپەڕەیەکی history
 
 # ─── جاکپۆتی پەرەسەندوو (جیاوازە لە ٥ ئاستی بردنەوە) ───
@@ -644,16 +644,18 @@ class SlotsCog(commands.Cog):
         finally:
             self.busy.discard(uid)
 
-    # ئانیمەیشن: وەک OwO. هەر سێ دەسووڕێن، چەپ دەوەستێت، پاشان ناوەڕاست و ڕاست پێکەوە،
-    # و لە کۆتاییدا نووسینی ئەنجام. هیچ نیشانەیەک نییە کە پێشوەخت بردنەوە ئاشکرا بکات
+    # ئانیمەیشن: ڕێک وەک OwO. هەر سێ دەسووڕێن، پاشان چەپ دەوەستێت، دواتر ڕاست،
+    # دواتر ناوەڕاست، و لە کۆتاییدا نووسینی ئەنجام. هیچ نیشانەیەک نییە کە بردنەوە پێشوەخت ئاشکرا بکات
     async def animate(self, channel, author, name, amount, outcome, res):
         left, mid, right = [KEY_EMOJI[k] for k in outcome["keys"]]
         spin = SPIN_EMOJI
         special = outcome["jackpot"] or outcome["mult"] == 10
         try:
             msg = await channel.send(slots_text([spin, spin, spin], name, amount))
-            await asyncio.sleep(SPIN_STEP * 1.2)
+            await asyncio.sleep(SPIN_STEP)
             await msg.edit(content=slots_text([left, spin, spin], name, amount))
+            await asyncio.sleep(SPIN_STEP)
+            await msg.edit(content=slots_text([left, spin, right], name, amount))
             await asyncio.sleep(SPIN_STEP)
             await msg.edit(content=slots_text([left, mid, right], name, amount))
             await asyncio.sleep(SPIN_STEP)
