@@ -38,9 +38,6 @@ bot = commands.Bot(
     case_insensitive=True,  # zPing و zping هەردووکیان کار دەکەن
 )
 
-# ناوی ئەو ڕۆڵەی بە ئەندامی نوێ دەدرێت (دەبێت وەک خۆی لە سێرڤەر هەبێت)
-AUTO_ROLE_NAME = "Member"
-
 # ═══════════════════════════════════════
 # بەشی ٢: خوێندنەوەی فایلەکانی cogs
 # ═══════════════════════════════════════
@@ -62,6 +59,7 @@ async def setup_hook():
     await bot.load_extension("cogs.economy")  # دراو: cash, daily, coinflip
     await bot.load_extension("cogs.slots")    # یاری سلۆت
     await bot.load_extension("cogs.owner")    # فەرمانە نهێنییەکانی خاوەن
+    await bot.load_extension("cogs.welcome")  # Welcome / Invite / Left + ژووری نهێنی
 
 bot.setup_hook = setup_hook
 
@@ -195,34 +193,9 @@ async def clear(ctx, amount: int = 5):
     await ctx.send(embed=embed, delete_after=4)  # دوای ٤ چرکە خۆی دەسڕێتەوە
 
 # ═══════════════════════════════════════
-# بەشی ٦: ڕۆڵی خۆکار + بەخێرهاتن
+# بەشی ٦: بەخێرهاتن، بانگهێشت و دەرچوون
+# ئێستا لە cogs/welcome.py ـە و هەر سێرڤەرێک بە ژووری نهێنی (z setup) ڕێکی دەخات
 # ═══════════════════════════════════════
-
-@bot.event
-async def on_member_join(member):
-    # ١) ڕۆڵەکە بدە
-    role = discord.utils.get(member.guild.roles, name=AUTO_ROLE_NAME)
-    if role:
-        try:
-            await member.add_roles(role)
-        except discord.Forbidden:
-            print("بوتەکە ناتوانێت ڕۆڵ بدات: ڕۆڵی بوت دەبێت بەرزتر بێت")
-
-    # ٢) نامەی بەخێرهاتنی جوان
-    channel = member.guild.system_channel
-    if channel:
-        embed = make_embed(
-            "🎉 بەخێربێیت!",
-            f"{member.mention} هاتە ناو **{member.guild.name}**\nهیوادارین کاتێکی خۆش بەسەر ببەیت 💙",
-            color=SUCCESS,
-        )
-        embed.set_thumbnail(url=member.display_avatar.url)
-        embed.add_field(name="ژمارەی ئەندام", value=f"#{member.guild.member_count}")
-        embed.add_field(
-            name="ئەکاونتی دروست کرا",
-            value=discord.utils.format_dt(member.created_at, "R"),
-        )
-        await channel.send(embed=embed)
 
 # ═══════════════════════════════════════
 # بەشی ٧: زانیاری
@@ -277,6 +250,8 @@ async def on_command_error(ctx, error):
 
     if isinstance(error, commands.MissingPermissions):
         text = "تۆ ڕێگەی بەکارهێنانی ئەم فەرمانەت نییە."
+    elif isinstance(error, commands.NoPrivateMessage):
+        text = "ئەڤ فەرمانە تەنێ ل ناڤ سێرڤەری کار دکەت."
     elif isinstance(error, commands.MemberNotFound):
         text = "ئەو ئەندامە نەدۆزرایەوە."
     elif isinstance(error, commands.MissingRequiredArgument):
