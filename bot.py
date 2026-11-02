@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 # ڕەنگەکان و فەرمانی دروستکردنی کارتەکان لە فایلی utils.py هاتوون
-from utils import make_embed, PREFIX, MAIN, SUCCESS, ERROR, WARN
+from utils import make_embed, PREFIX, EXTRA_PREFIXES, MAIN, SUCCESS, ERROR, WARN
 
 # ═══════════════════════════════════════
 # بەشی ١: ڕێکخستنی بنەڕەتی
@@ -17,8 +17,20 @@ intents.members = True          # بۆ بینینی ئەندامەکان
 # when_mentioned_or: mention کردنی بوتەکەش وەک هێما کار دەکات
 # PREFIX.upper(): پیتی گەورەش کار دەکات (z و Z)
 # strip_after_prefix: بۆشایی دوای هێما کێشە نییە (z ping)
+# هێماکان بێ جیاکردنەوەی پیتی گەورە و بچووک. درێژترین هێما یەکەمجار دەپشکنرێت
+# بۆ ئەوەی "zero cash" بە "zero" بخوێنرێتەوە نەک "z" + "ero cash"
+ALL_PREFIXES = sorted({PREFIX.lower(), *(p.lower() for p in EXTRA_PREFIXES)}, key=len, reverse=True)
+
+def get_prefix(bot, message):
+    prefixes = commands.when_mentioned(bot, message)
+    content = message.content.lower()
+    for p in ALL_PREFIXES:
+        if content.startswith(p):
+            return prefixes + [message.content[:len(p)]]
+    return prefixes
+
 bot = commands.Bot(
-    command_prefix=commands.when_mentioned_or(PREFIX, PREFIX.upper()),
+    command_prefix=get_prefix,
     intents=intents,
     help_command=None,
     strip_after_prefix=True,
@@ -257,3 +269,4 @@ if __name__ == "__main__":
     if not token:
         raise SystemExit("DISCORD_TOKEN نییە! تۆکنەکە لە environment variable دابنێ.")
     bot.run(token)
+    
