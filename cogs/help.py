@@ -58,7 +58,7 @@ CATEGORIES = {
         "desc": "فەرمانێن سادە و بسوود",
         "color": 0x5865F2,
         "commands": [
-            ("{p} help", "ئەڤ مینیۆیێ ڤەدکەت (`{p} h` یان `{p} یارمەتی`)"),
+            ("{p} help", "ئەڤ مینیۆیێ ڤەدکەت (`{p} یارمەتی`)"),
             ("{p} ping", "خێراییا بوتی نیشان ددەت"),
             ("{p} سڵاو", "سلاڤێ ل بوتی بکە"),
         ],
@@ -84,6 +84,28 @@ CATEGORIES = {
             ("{p} daily", f"{CURRENCY}ا ڕۆژانە وەربگرە، هەر ٢٤ دەمژمێران جارەکێ"),
             ("{p} send @کەس <بڕ>", f"{CURRENCY} بۆ کەسەکێ بنێرە، پشتی دڵنیابوونێ (`{{p}} give` / `{{p}} pay`)"),
             ("{p} send @کەس all", "هەمی دراوێن خوە بنێرە (`half` = نیڤا وان)"),
+        ],
+    },
+    "hunt": {
+        "emoji": "🐾",
+        "title": "ڕاوکردن (Zero Hunt)",
+        "desc": "ئاژەڵ ڕاو بکە، کۆیان بکەرەوە، بیانفرۆشە و Huntbot ی خۆت زیاد بکە",
+        "color": 0x9B59B6,
+        "commands": [
+            ("{p} hunt", "ئاژەڵێک ڕاو بکە (`{p} h` / `{p} catch`). نرخ: ١٠ دراو، ١٥ چرکە cooldown"),
+            ("{p} zoo", "باخچەی ئاژەڵەکانت (`{p} zoo rare` / `{p} zoo display` / `{p} zoo search <ناو>`)"),
+            ("{p} sell <ئاژەڵ/rarity/all>", "ئاژەڵ بفرۆشە (`{p} sell wolf 3` / `{p} sell common` / `{p} sell all`)"),
+            ("{p} sacrifice <ئاژەڵ/rarity/all>", "ئاژەڵ بکە essence (`{p} essence` بۆ بینینی بڕەکەی)"),
+            ("{p} lock <ئاژەڵ>", "ئاژەڵێک بپارێزە لە فرۆشتن (`{p} unlock` بۆ لابردنی)"),
+            ("{p} team", "تیمی پێت. XP وەردەگرن (`{p} team add wolf` / `{p} team remove wolf` / `{p} rename wolf ناو`)"),
+            ("{p} gems", "gem ەکانت (`{p} use <id>` چالاکی دەکات، `{p} geminfo <id>`)"),
+            ("{p} lootbox", "lootbox ەکانت (`{p} lootbox open` / `{p} lootbox history`)"),
+            ("{p} inventory", "هەموو شتەکانت و buff ە چالاکەکان (`{p} bag` / `{p} buffs`)"),
+            ("{p} huntbot", "بۆتی ڕاوکردنی ئۆفلاین (`{p} hb start` / `{p} hb upgrade <stat>` / `{p} hb claim`)"),
+            ("{p} owodex <ئاژەڵ>", "ئینسایکلۆپیدیای ئاژەڵەکان"),
+            ("{p} huntstats", "ئاماری ڕاوکردنت (`{p} hs`)"),
+            ("{p} huntlb", "لیستی پێشەنگی ڕاوکردن (`{p} hlb`)"),
+            ("{p} events", "event ە چالاکەکان (Halloween، Christmas، ...)"),
         ],
     },
     "games": {
@@ -428,7 +450,7 @@ class HelpCog(commands.Cog):
         self.bot = bot
 
     # !help (یان !h یان !یارمەتی یان !commands)
-    @commands.command(name="help", aliases=["h", "یارمەتی", "commands", "cmd", "cmds"])
+    @commands.command(name="help", aliases=["یارمەتی", "commands", "cmd", "cmds"])
     async def help_command(self, ctx):
         invite_url = (
             f"https://discord.com/oauth2/authorize?client_id={ctx.bot.user.id}"
