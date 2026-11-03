@@ -88,13 +88,6 @@ DEFAULTS = {
     },
 }
 
-VARIABLES_HELP = (
-    "`{user}` mention • `{name}` ناڤێ دیار • `{username}` یوزەرنەیم • `{id}` ئایدی\n"
-    "`{server}` ناڤێ سێرڤەری • `{count}` ژمارا ئەندامان\n"
-    "`{created}` دروستبوونا ئەکاونتی • `{joined}` دەمێ هاتنێ\n"
-    "`{inviter}` بانگهێشتکەر • `{inviter_name}` ناڤێ وی • `{invites}` ژمارا بانگهێشتێن وی"
-)
-
 NAMED_COLORS = {
     "red": 0xE74C3C, "سوور": 0xE74C3C, "sor": 0xE74C3C,
     "blue": 0x3498DB, "شین": 0x3498DB,
@@ -192,19 +185,49 @@ def invite_stats(guild_id, user_id):
     return int(row[0]), int(row[1])
 
 
-def make_vars(guild, member, inviter_id=None, inviter_name=None, invites=0):
+def make_vars(guild, member, inviter_id=None, inviter_name=None, invites=0, invites_left=0, code=""):
+    now = discord.utils.utcnow()
+    bots = sum(1 for m in guild.members if m.bot)
+    owner = guild.owner
+    top = getattr(member, "top_role", None)
+    age_days = max((now - member.created_at).days, 0)
     return {
+        # 👤 ئەندام
         "user": member.mention,
-        "username": member.name,
         "name": member.display_name,
+        "username": member.name,
         "id": str(member.id),
+        "avatar": member.display_avatar.url,
+        "top_role": top.name if top and not top.is_default() else "ئەندام",
+        # 🏠 سێرڤەر
         "server": guild.name,
+        "server_id": str(guild.id),
+        "server_icon": guild.icon.url if guild.icon else "",
         "count": str(guild.member_count),
+        "humans": str(max((guild.member_count or 0) - bots, 0)),
+        "bots": str(bots),
+        "owner": f"<@{guild.owner_id}>",
+        "owner_name": owner.name if owner else "؟",
+        "boosts": str(guild.premium_subscription_count or 0),
+        "boost_level": str(guild.premium_tier),
+        "channels": str(len(guild.channels)),
+        "roles": str(len(guild.roles)),
+        # ⏰ دەم
         "created": discord.utils.format_dt(member.created_at, "R"),
+        "created_date": discord.utils.format_dt(member.created_at, "D"),
+        "account_age": f"{age_days} ڕۆژ",
         "joined": discord.utils.format_dt(member.joined_at, "R") if member.joined_at else "؟",
+        "joined_date": discord.utils.format_dt(member.joined_at, "D") if member.joined_at else "؟",
+        "date": discord.utils.format_dt(now, "D"),
+        "time": discord.utils.format_dt(now, "t"),
+        # 🔗 بانگهێشت
         "inviter": f"<@{inviter_id}>" if inviter_id else "نەدیار",
         "inviter_name": inviter_name or "نەدیار",
+        "inviter_id": str(inviter_id) if inviter_id else "نەدیار",
         "invites": str(invites),
+        "invites_left": str(invites_left),
+        "invites_total": str(invites + invites_left),
+        "invite_code": code or "نەدیار",
     }
 
 
@@ -251,22 +274,225 @@ async def owner_only(interaction):
     return False
 
 
+def kind_status(guild, kind):
+    """(نیشانا دۆخی، کەناڵ) بۆ هەر جۆرەکێ"""
+    cfg = load_cfg(guild.id, kind)
+    ch = guild.get_channel(cfg["channel"]) if cfg["channel"] else None
+    if cfg["enabled"] and ch:
+        return "🟢 چالاکە", ch.mention
+    if ch:
+        return "🟡 ناچالاکە", ch.mention
+    return "⚪ ڕێک نەکریە", "─"
+
+
 def main_embed(guild):
-    lines = []
-    for kind, meta in KINDS.items():
-        cfg = load_cfg(guild.id, kind)
-        ch = guild.get_channel(cfg["channel"]) if cfg["channel"] else None
-        state = "✅" if cfg["enabled"] and ch else "⛔"
-        where = ch.mention if ch else "`نەهاتییە دیارکرن`"
-        lines.append(f"{state} {meta['emoji']} **{meta['name']}** ─ {meta['desc']}\n　📍 {where}")
-    return make_embed(
-        "⚙️ ناوەندێ ڕێکخستنێ",
-        (
-            "ئەڤ ژوورە **تەنێ بۆ تە یە**، کەس نابینیت 🔒\n"
-            "بەشەکی هەلبژێرە و هەمی تشتان ب دلێ خوە بگوهۆڕە: دەق، ڕەنگ، وێنە و GIF.\n\n"
-            + "\n".join(lines)
+    embed = discord.Embed(
+        title="⚙️ ناوەندێ ڕێکخستنا Zero Bot",
+        description=(
+            "ل ڤێرێ تو دشێی نامەیێن **بخێرهاتن، بانگهێشت و دەرچوونێ** ب دلێ خوە دروست بکەی ✨\n"
+            "ڕەنگ، وێنە، **GIFا جولاو** و هەر دەقەکێ بگوهۆڕە، ب بێ چ کۆدی.\n"
+            "🔒 *ئەڤ ژوورە تەنێ بۆ تە یە.*"
         ),
         color=MAIN,
+        timestamp=discord.utils.utcnow(),
+    )
+    for kind, meta in KINDS.items():
+        state, where = kind_status(guild, kind)
+        embed.add_field(
+            name=f"{meta['emoji']} {meta['name']}",
+            value=f"{state}\n{where}\n*{meta['desc']}*",
+            inline=True,
+        )
+    embed.add_field(
+        name="🚀 چەوا دەست پێ بکەم؟",
+        value=(
+            "**١️⃣** دوگمەکێ ژ خوارێ هەلبژێرە\n"
+            "**٢️⃣** کەناڵەکێ هەلبژێرە، دێ خۆکار چالاک بیت\n"
+            "**٣️⃣** دەق، ڕەنگ و وێنە ب دلێ خوە بگوهۆڕە\n"
+            "**٤️⃣** 👁️ پێشبینین و 📨 تاقیکرن بکە\n"
+            "❓ بۆ ڕێنمایی تەمام دوگمەیا ❓ بکلیک بکە"
+        ),
+        inline=False,
+    )
+    embed.set_footer(text="Zero Bot • تەنێ خودانێ سێرڤەری دشێت بکاربینیت")
+    return embed
+
+
+def guide_embed():
+    embed = discord.Embed(
+        title="❓ ڕێنمایی: چەوا ڕێک بخەم؟",
+        description="هەنگاڤ ب هەنگاڤ، ب دوگمەیان ─ چ کۆد نەدڤێت 🙂",
+        color=MAIN,
+    )
+    embed.add_field(
+        name="📍 ١. کەناڵ",
+        value="لیستا سەرەکی بکاربینە و کەناڵا نامە دێ ل وێ بهێنە هنارتن هەلبژێرە. ئەگەر یەکەم جار بیت، **خۆکار چالاک دبیت**.",
+        inline=False,
+    )
+    embed.add_field(
+        name="✏️ ٢. دەق",
+        value="ناڤونیشان، دەقێ سەرەکی، footer و نامەیا دەرڤەیێ کارتی (بۆ mention). ب گۆڕاوان ڕێک بخە، نموونە `{user}` و `{server}` (دوگمەیا 🧩).",
+        inline=False,
+    )
+    embed.add_field(
+        name="🎨 ٣. ڕەنگ و وێنە",
+        value=(
+            "🎨 ڕەنگێ هێلا درێژا کارتی دگوهۆڕیت (`#FF0000` یان `red`/`سوور`/`شین`)\n"
+            "📤 وێنە یان **GIFا جولاو** بار بکە ─ بۆت دپارێزیت، نابیت ب دوماهی\n"
+            "🔗 یان لینکەکێ ڕاستەوخۆ یێ `.gif` بدە\n"
+            "👤 وێنەیێ بچووکێ سەرەوە: ئەندام / سێرڤەر / نینە"
+        ),
+        inline=False,
+    )
+    embed.add_field(
+        name="✅ ٤. تاقیکرن",
+        value="👁️ پێشبینین تەنێ تو دبینی ─ 📨 تاقیکرن نامەکێ ب ڕاستی ل کەناڵێ دنێریت ─ 🔔 چالاک/ناچالاک ─ ♻️ ڕێست بۆ بنەڕەتی.",
+        inline=False,
+    )
+    embed.add_field(
+        name="🔗 Invite چەوا کار دکەت؟",
+        value="بۆت دبینیت کێ بانگهێشت کریە (پێدڤی ب مۆڵەتا Manage Server). `z invites` ژمارێ نیشان ددەت.",
+        inline=False,
+    )
+    return embed
+
+
+# ═══════════════════════════════════════
+# گەڕۆکا گۆڕاوان: گروپ ب گروپ، ب نموونەیێن ڕاستەقینە
+# ═══════════════════════════════════════
+VAR_GROUPS = [
+    ("👤", "ئەندام", 0x5865F2, [
+        ("user", "mention ێ ئەندامی"),
+        ("name", "ناڤێ دیار (nickname)"),
+        ("username", "یوزەرنەیم"),
+        ("id", "ئایدیێ ئەندامی"),
+        ("avatar", "لینکا وێنەیێ ئەندامی"),
+        ("top_role", "بلندترین ڕۆلێ وی"),
+    ]),
+    ("🏠", "سێرڤەر", 0x2ECC71, [
+        ("server", "ناڤێ سێرڤەری"),
+        ("server_id", "ئایدیێ سێرڤەری"),
+        ("server_icon", "لینکا لۆگۆیێ سێرڤەری"),
+        ("count", "ژمارا هەمی ئەندامان"),
+        ("humans", "ژمارا مرۆڤان (بێ بۆتان)"),
+        ("bots", "ژمارا بۆتان"),
+        ("owner", "mention ێ خودانێ سێرڤەری"),
+        ("owner_name", "ناڤێ خودانی"),
+        ("boosts", "ژمارا بووستان"),
+        ("boost_level", "ئاستا بووستێ"),
+        ("channels", "ژمارا کەناڵان"),
+        ("roles", "ژمارا ڕۆلان"),
+    ]),
+    ("⏰", "دەم و بەروار", 0xF1C40F, [
+        ("created", "دروستبوونا ئەکاونتی (نێزیک، نموونە: ٣ ساڵ بەری نوکە)"),
+        ("created_date", "بەرواری دروستبوونا ئەکاونتی"),
+        ("account_age", "تەمەنێ ئەکاونتی ب ڕۆژ"),
+        ("joined", "دەمێ هاتنێ (نێزیک)"),
+        ("joined_date", "بەرواری هاتنێ"),
+        ("date", "بەرواری ئەمڕۆ"),
+        ("time", "دەمژمێرا نوکە"),
+    ]),
+    ("🔗", "بانگهێشت", 0xE91E63, [
+        ("inviter", "mention ێ بانگهێشتکەری"),
+        ("inviter_name", "ناڤێ بانگهێشتکەری"),
+        ("inviter_id", "ئایدیێ بانگهێشتکەری"),
+        ("invites", "ژمارا بانگهێشتێن وی یێن ماینە"),
+        ("invites_left", "ژمارا ئەوێن دەرکەتین"),
+        ("invites_total", "کۆیا بانگهێشتان"),
+        ("invite_code", "کۆدا لینکا بانگهێشتێ"),
+    ]),
+]
+VAR_TOTAL = sum(len(g[3]) for g in VAR_GROUPS)
+
+SAMPLE_TEXT = (
+    "بخێر بێی {name}! 🎉\n"
+    "تو ئەندامێ #{count} یی ل {server}.\n"
+    "ئەکاونتێ تە {created} هاتییە چێکرن، و {inviter} تە بانگهێشت کر."
+)
+
+
+def sample_member_vars(guild, member):
+    return make_vars(guild, member, member.id, member.name, 5, 2, "abc123")
+
+
+def vars_overview_embed(guild, member):
+    sample = sample_member_vars(guild, member)
+    groups = "\n".join(f"{e} **{n}** ─ `{len(items)}` گۆڕاو" for e, n, _, items in VAR_GROUPS)
+    embed = discord.Embed(
+        title="🧩 هەمی گۆڕاوان",
+        description=(
+            f"**{VAR_TOTAL} گۆڕاو** هەنە. ب نڤیسینا وان د ناڤ هەر دەقەکێ دا (ناڤونیشان، دەق، footer...) "
+            "بۆت دێ ب زانیاریا ڕاستەقینە بگوهۆڕیت.\n"
+            "👇 گروپەکێ ژ لیستا خوارێ هەلبژێرە بۆ دیتنا هەمیان ب نموونەیێن ڕاستەقینە."
+        ),
+        color=MAIN,
+    )
+    embed.add_field(name="📚 گروپ", value=groups, inline=False)
+    embed.add_field(
+        name="📌 نموونە",
+        value=f"```\n{SAMPLE_TEXT}\n```⬇️\n{fill(SAMPLE_TEXT, sample)}",
+        inline=False,
+    )
+    embed.set_footer(text="Zero Bot • نموونە ب زانیاریێن تە ب خوە هاتینە دروستکرن")
+    return embed
+
+
+def vars_group_embed(guild, member, idx):
+    emoji, name, color, items = VAR_GROUPS[idx]
+    sample = sample_member_vars(guild, member)
+    lines = []
+    for key, desc in items:
+        value = cut(str(sample.get(key, "")).replace("\n", " "), 40) or "─"
+        lines.append(f"`{{{key}}}` ─ {desc}\n　↳ {value}")
+    embed = discord.Embed(
+        title=f"{emoji} گۆڕاوێن {name}",
+        description="ناڤێ گۆڕاوی ب `{ }` ڤە بنڤیسە. ئەو تشتێ ل خوارێ ب ‹↳› دیار دبیت **نموونەیەکا ڕاستەقینەیە**.",
+        color=color,
+    )
+    chunk, size = [], 0
+    for line in lines:
+        if size + len(line) > 950:
+            embed.add_field(name="\u200b", value="\n".join(chunk), inline=False)
+            chunk, size = [], 0
+        chunk.append(line)
+        size += len(line) + 1
+    if chunk:
+        embed.add_field(name="\u200b", value="\n".join(chunk), inline=False)
+    return embed
+
+
+class VarsSelect(discord.ui.Select):
+    def __init__(self):
+        options = [discord.SelectOption(label="پوختە و نموونە", value="all", emoji="📌")]
+        for i, (emoji, name, _, items) in enumerate(VAR_GROUPS):
+            options.append(
+                discord.SelectOption(label=name, value=str(i), emoji=emoji, description=f"{len(items)} گۆڕاو")
+            )
+        super().__init__(placeholder="📚 گروپەکێ هەلبژێرە...", options=options, min_values=1, max_values=1)
+
+    async def callback(self, interaction):
+        view = self.view
+        value = self.values[0]
+        if value == "all":
+            embed = vars_overview_embed(view.guild, view.member)
+        else:
+            embed = vars_group_embed(view.guild, view.member, int(value))
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class VarsView(discord.ui.View):
+    def __init__(self, guild, member):
+        super().__init__(timeout=300)
+        self.guild = guild
+        self.member = member
+        self.add_item(VarsSelect())
+
+
+async def open_vars(interaction):
+    await interaction.response.send_message(
+        embed=vars_overview_embed(interaction.guild, interaction.user),
+        view=VarsView(interaction.guild, interaction.user),
+        ephemeral=True,
     )
 
 
@@ -440,6 +666,27 @@ class MainPanelView(discord.ui.View):
             )
             button.callback = self._make_callback(kind)
             self.add_item(button)
+        guide = discord.ui.Button(
+            label="ڕێنمایی",
+            emoji="❓",
+            style=discord.ButtonStyle.secondary,
+            custom_id="zb:panel:guide",
+            row=1,
+        )
+        guide.callback = self._guide_callback
+        self.add_item(guide)
+        variables = discord.ui.Button(
+            label="گۆڕاو",
+            emoji="🧩",
+            style=discord.ButtonStyle.secondary,
+            custom_id="zb:panel:vars",
+            row=1,
+        )
+        variables.callback = open_vars
+        self.add_item(variables)
+
+    async def _guide_callback(self, interaction):
+        await interaction.response.send_message(embed=guide_embed(), ephemeral=True)
 
     def _make_callback(self, kind):
         async def callback(interaction):
@@ -474,6 +721,8 @@ class EditorView(discord.ui.View):
         self._button("تاقیکرن", "📨", discord.ButtonStyle.secondary, 2, self.on_test)
         self._button("ڕێست", "♻️", discord.ButtonStyle.danger, 2, self.on_reset)
         self._button("ڤەگەڕ", "↩️", discord.ButtonStyle.secondary, 2, self.on_back)
+        self._button("ڕێنمایی", "❓", discord.ButtonStyle.secondary, 4, self.on_guide)
+        self._button("گۆڕاو", "🧩", discord.ButtonStyle.secondary, 4, self.on_vars)
 
         if kind == "welcome":
             self.add_item(RolePick(self))
@@ -499,47 +748,75 @@ class EditorView(discord.ui.View):
     def build_embed(self):
         cfg, meta = self.cfg, KINDS[self.kind]
         ch = self.guild.get_channel(cfg["channel"]) if cfg["channel"] else None
+        has_text = bool(cfg["title"] or cfg["description"])
         img = cfg["image"]
+        ready = bool(cfg["enabled"] and ch)
+
+        progress = (
+            f"{'✅' if ch else '⬜'} **١** کەناڵ\n"
+            f"{'✅' if has_text else '⬜'} **٢** دەق\n"
+            f"{'✅' if img else '➖'} **٣** ڕەنگ و وێنە *(دلخواز)*\n"
+            f"{'✅' if ready else '⬜'} **٤** چالاک"
+        )
+        embed = discord.Embed(
+            title=f"{meta['emoji']} {meta['name']}",
+            description=f"*{meta['desc']}*\n\n{progress}",
+            color=cfg["color"],
+            timestamp=discord.utils.utcnow(),
+        )
+
         if img.startswith("file:"):
-            img_txt = "📤 فایلەکێ بارکری"
+            img_txt = "📤 فایل"
         elif img:
             img_txt = "🔗 لینک"
         else:
             img_txt = "نینە"
-        thumb_txt = {"user": "وێنەیێ ئەندامی", "server": "لۆگۆیێ سێرڤەری", "none": "نینە"}[cfg["thumb"]]
+        thumb_txt = {"user": "ئەندام", "server": "سێرڤەر", "none": "نینە"}[cfg["thumb"]]
 
-        lines = [
-            f"📍 **کەناڵ:** {ch.mention if ch else '`هێشتا نەهاتییە دیارکرن`'}",
-            f"🔔 **دۆخ:** {'✅ چالاکە' if cfg['enabled'] else '⛔ ناچالاکە'}",
-            f"🎨 **ڕەنگ:** `#{cfg['color']:06X}`",
-            f"🖼️ **وێنە/GIF:** {img_txt}",
-            f"👤 **وێنەیێ بچووک:** {thumb_txt}",
-        ]
+        embed.add_field(name="📍 کەناڵ", value=ch.mention if ch else "`نەهاتییە دیارکرن`", inline=True)
+        embed.add_field(name="🔔 دۆخ", value="🟢 چالاکە" if cfg["enabled"] else "⚪ ناچالاکە", inline=True)
+        embed.add_field(name="🎨 ڕەنگ", value=f"`#{cfg['color']:06X}`", inline=True)
+        embed.add_field(name="🖼️ وێنە/GIF", value=img_txt, inline=True)
+        embed.add_field(name="👤 بچووک", value=thumb_txt, inline=True)
         if self.kind == "welcome":
             role = self.guild.get_role(cfg["role"]) if cfg["role"] else None
-            lines.append(f"🎭 **ڕۆلێ خۆکار:** {role.mention if role else 'نینە'}")
+            embed.add_field(name="🎭 ڕۆل", value=role.mention if role else "نینە", inline=True)
+
+        title_line = cut(cfg["title"], 120) or "─"
+        desc_line = (cut(cfg["description"], 220) or "─").replace("\n", "\n> ")
+        embed.add_field(
+            name="✏️ دەقێ ئێستا",
+            value=f"> **{title_line}**\n> {desc_line}",
+            inline=False,
+        )
+
         if ch:
             perms = ch.permissions_for(self.guild.me)
             if not (perms.send_messages and perms.embed_links):
-                lines.append("⚠️ **بۆت ل ڤێ کەناڵێ مۆڵەتا نڤیسینێ و embed ی نینە!**")
+                embed.add_field(
+                    name="⚠️ ئاگەهداری",
+                    value="بۆت ل ڤێ کەناڵێ مۆڵەتا **نڤیسینێ** و **Embed Links** ی نینە!",
+                    inline=False,
+                )
 
-        embed = discord.Embed(
-            title=f"{meta['emoji']} {meta['name']} ─ ڕێکخستن",
-            description="\n".join(lines),
-            color=cfg["color"],
-        )
-        current = f"**{cut(cfg['title'], 120) or '─'}**\n{cut(cfg['description'], 300) or '─'}"
-        embed.add_field(name="✏️ دەقێ ئێستا", value=current, inline=False)
-        embed.add_field(name="🧩 گۆڕاو (variables)", value=VARIABLES_HELP, inline=False)
         embed.add_field(
-            name="💡 ئامۆژگاری",
+            name="🎛️ دوگمە چ دکەن؟",
             value=(
-                "• **GIFا جولاو:** 📤 بکلیک بکە و GIFەکێ بۆ ڤێرێ بنێرە، یان لینکەکێ ڕاستەوخۆ یێ `.gif` بدە\n"
-                "• 👤 دوگمەیا دوماهیێ وێنەیێ بچووکێ سەرەوە دگوهۆڕیت\n"
-                "• 📨 نامەیەکا تاقیکرنێ دنێریتە کەناڵێ"
+                "✏️ دەق ─ 🎨 ڕەنگێ هێلێ ─ 🔗 لینکێ وێنە/GIF ─ 📤 بارکرنا فایلی ─ 👤 وێنەیێ بچووک\n"
+                "🔔 چالاک/ناچالاک ─ 👁️ پێشبینین (تەنێ تو) ─ 📨 تاقیکرن ل کەناڵێ ─ ♻️ ڕێست ─ ↩️ ڤەگەڕ\n"
+                "❓ ڕێنمایی ─ 🧩 گۆڕاو"
             ),
             inline=False,
         )
+        embed.add_field(
+            name=f"🧩 {VAR_TOTAL} گۆڕاو ل ڤێرێ بکاربینە",
+            value=(
+                "`{user}` `{name}` `{username}` `{server}` `{count}` `{created}` `{inviter}` `{invites}` ...\n"
+                "دوگمەیا **🧩** بکلیک بکە بۆ دیتنا هەمیان ب نموونەیان."
+            ),
+            inline=False,
+        )
+        embed.set_footer(text="Zero Bot • گوهۆڕین ب خۆکار دهێنە پاراستن")
         return embed
 
     async def save_and_redraw(self, interaction):
@@ -649,6 +926,12 @@ class EditorView(discord.ui.View):
         self.cfg["channel"] = old_channel
         await self.save_and_redraw(interaction)
 
+    async def on_guide(self, interaction):
+        await interaction.response.send_message(embed=guide_embed(), ephemeral=True)
+
+    async def on_vars(self, interaction):
+        await open_vars(interaction)
+
     async def on_back(self, interaction):
         self.stop()
         await interaction.response.edit_message(
@@ -687,28 +970,28 @@ class WelcomeCog(commands.Cog):
         }
 
     async def find_inviter(self, guild):
-        """ئایدیێ بانگهێشتکەری دزڤڕینیت (یان None)"""
+        """(ئایدیێ بانگهێشتکەری، کۆدا بانگهێشتێ) دزڤڕینیت. (None, None) ئەگەر نەدیار بیت"""
         old = self.invites.get(guild.id)
         try:
             current = await guild.invites()
         except (discord.Forbidden, discord.HTTPException):
-            return None
+            return None, None
         new = {i.code: i for i in current}
         self.invites[guild.id] = {
             c: (i.uses or 0, i.inviter.id if i.inviter else 0, i.max_uses or 0) for c, i in new.items()
         }
         if old is None:
-            return None
+            return None, None
 
         # ١) بانگهێشتەک کو ژمارا بکارئینانا وێ زێدە بوویە
         for code, inv in new.items():
             if (inv.uses or 0) > old.get(code, (0, 0, 0))[0] and inv.inviter:
-                return inv.inviter.id
+                return inv.inviter.id, code
         # ٢) بانگهێشتا ئێک-جاری کو پشتی بکارئینانێ هاتییە ژێبرن
         for code, (uses, inviter_id, max_uses) in old.items():
             if code not in new and max_uses and uses + 1 >= max_uses and inviter_id:
-                return inviter_id
-        return None
+                return inviter_id, code
+        return None, None
 
     async def inviter_name(self, user_id):
         if not user_id:
@@ -741,7 +1024,7 @@ class WelcomeCog(commands.Cog):
 
     # ─── ناردن ───
     def sample_vars(self, guild, member):
-        return make_vars(guild, member, member.id, member.name, 5)
+        return sample_member_vars(guild, member)
 
     async def deliver(self, guild, kind, member, variables, force=False):
         cfg = load_cfg(guild.id, kind)
@@ -771,15 +1054,17 @@ class WelcomeCog(commands.Cog):
             return
         guild = member.guild
 
-        inviter_id = await self.find_inviter(guild)
+        inviter_id, code = await self.find_inviter(guild)
         if inviter_id:
             db.execute(
                 "INSERT INTO invite_joins (guild_id, inviter_id, member_id, ts) VALUES (?, ?, ?, strftime('%s','now'))",
                 (guild.id, inviter_id, member.id),
             )
             db.commit()
-        active, _ = invite_stats(guild.id, inviter_id) if inviter_id else (0, 0)
-        variables = make_vars(guild, member, inviter_id, await self.inviter_name(inviter_id), active)
+        active, left = invite_stats(guild.id, inviter_id) if inviter_id else (0, 0)
+        variables = make_vars(
+            guild, member, inviter_id, await self.inviter_name(inviter_id), active, left, code
+        )
 
         # ڕۆلێ خۆکار (سەربەخۆ ژ چالاکبوونا نامەیێ)
         role_id = load_cfg(guild.id, "welcome").get("role", 0)
@@ -810,8 +1095,8 @@ class WelcomeCog(commands.Cog):
             inviter_id = row[1]
             db.execute("UPDATE invite_joins SET has_left=1 WHERE id=?", (row[0],))
             db.commit()
-        active, _ = invite_stats(guild.id, inviter_id) if inviter_id else (0, 0)
-        variables = make_vars(guild, member, inviter_id, await self.inviter_name(inviter_id), active)
+        active, left = invite_stats(guild.id, inviter_id) if inviter_id else (0, 0)
+        variables = make_vars(guild, member, inviter_id, await self.inviter_name(inviter_id), active, left)
         ok, err = await self.deliver(guild, "leave", member, variables)
         if err and err != "no_channel":
             print(f"[leave] هەلە: {err}")
