@@ -60,6 +60,7 @@ async def setup_hook():
     await bot.load_extension("cogs.slots")    # یاری سلۆت
     await bot.load_extension("cogs.owner")    # فەرمانە نهێنییەکانی خاوەن
     await bot.load_extension("cogs.welcome")  # Welcome / Invite / Left + ژووری نهێنی
+    await bot.load_extension("cogs.hunt")     # ڕاوکردن: hunt, zoo, sell, huntbot, gems, lootbox...
 
 bot.setup_hook = setup_hook
 

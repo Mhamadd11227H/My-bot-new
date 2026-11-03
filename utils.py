@@ -9,7 +9,7 @@ PREFIX = "z"
 
 # هێماکانی تر کە بوتەکە پێیان وەڵام دەداتەوە (پیتی گەورە و بچووک جیاناکرێنەوە)
 # نموونە: zero cash، Zero cash، ZERO cash
-EXTRA_PREFIXES = ["zero"]
+EXTRA_PREFIXES = ["zero", "zow", "z!"]
 
 # ڕەنگەکان. دەتوانیت کۆدی هێکس بگۆڕیت
 MAIN = 0x5865F2      # شین (زانیاری)
