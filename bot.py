@@ -61,6 +61,8 @@ async def setup_hook():
     await bot.load_extension("cogs.owner")    # فەرمانە نهێنییەکانی خاوەن
     await bot.load_extension("cogs.welcome")  # Welcome / Invite / Left + ژووری نهێنی
     await bot.load_extension("cogs.hunt")     # ڕاوکردن: hunt, zoo, sell, huntbot, gems, lootbox...
+    await bot.load_extension("cogs.media")    # وێنە و GIF ی بوت (تەنها خاوەن)
+    await bot.load_extension("cogs.emoji")    # گۆڕینی ئیمۆجییەکان بە وێنە/GIF (تەنها خاوەن)
 
 bot.setup_hook = setup_hook
 
