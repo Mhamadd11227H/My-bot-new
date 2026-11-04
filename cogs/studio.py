@@ -542,7 +542,7 @@ class StudioCog(commands.Cog, name="Studio"):
             raise commands.NotOwner()
         return True
 
-    @commands.command(name="studio", aliases=["panel", "ui"])
+    @commands.command(name="studio", aliases=["studio-panel"])
     async def studio(self, ctx):
         try:
             await ctx.message.delete()
