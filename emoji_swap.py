@@ -62,12 +62,25 @@ def get(key):
     return _map.get(norm(key))
 
 
-def set_mapping(key, tag, emoji_id=None, created=None):
-    """created: "app" / "guild:<ئایدی>" ئەگەر بوت خۆی دروستی کرد (بۆ سڕینەوەی دواتر)، وگرنە None"""
+def set_mapping(key, tag, emoji_id=None, created=None, name=None):
+    """created: "app" / "guild:<ئایدی>" ئەگەر بوت خۆی دروستی کرد (بۆ سڕینەوەی دواتر)، وگرنە None
+    name: ناڤێ تو بۆ ڤێ گوهۆڕینێ دادنێی (ئەگەر نەهاتە دان، ناڤێ کۆن دمینیت)"""
     old = _map.get(norm(key))
-    _map[norm(key)] = {"tag": tag, "id": emoji_id, "created": created}
+    if name is None and old:
+        name = old.get("name")
+    _map[norm(key)] = {"tag": tag, "id": emoji_id, "created": created, "name": name}
     _save()
     return old
+
+
+def set_name(key, name):
+    """ناڤێ گوهۆڕینەکێ دگوهۆڕیت. False ئەگەر ئەو ئیمۆجی نەهاتبیتە گوهۆڕین"""
+    ent = _map.get(norm(key))
+    if ent is None:
+        return False
+    ent["name"] = name or None
+    _save()
+    return True
 
 
 def remove_mapping(key):

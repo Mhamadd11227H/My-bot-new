@@ -36,6 +36,7 @@ bot = commands.Bot(
     help_command=None,
     strip_after_prefix=True,
     case_insensitive=True,  # zPing و zping هەردووکیان کار دەکەن
+    owner_id=833437895724367892,  # تەنها ئەم ئایدییە خاوەنی بوتە (media / emoji / studio)
 )
 
 # ═══════════════════════════════════════
@@ -63,6 +64,7 @@ async def setup_hook():
     await bot.load_extension("cogs.hunt")     # ڕاوکردن: hunt, zoo, sell, huntbot, gems, lootbox...
     await bot.load_extension("cogs.media")    # وێنە و GIF ی بوت (تەنها خاوەن)
     await bot.load_extension("cogs.emoji")    # گۆڕینی ئیمۆجییەکان بە وێنە/GIF (تەنها خاوەن)
+    await bot.load_extension("cogs.studio")   # پانێلا تایبەت بۆ گوهۆڕینا ئیمۆجی و وێنەیان (تەنها خاوەن)
 
 bot.setup_hook = setup_hook
 
