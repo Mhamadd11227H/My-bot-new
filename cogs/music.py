@@ -38,6 +38,8 @@ PROGRESS_REFRESH = 8          # نوێکردنەوەی شریتی کات (چرک
 BAR_LENGTH = 14               # درێژی شریتی کات
 QUEUE_PER_PAGE = 8            # چەند گۆرانی لە هەر پەڕەیەکی ڕیزبەندی
 MENU_IMAGE = None             # وێنەی داشبۆرد (لینک). ئەگەر نەتەوێت: None
+STAY_IN_VOICE = False         # True = بوت هەرگیز بە خۆی لە ڤۆیس دەرناچێت (٢٤/٧). تەنها بە z stop دەچێتە دەرەوە
+AUDIO_FILTER = "dynaudnorm=f=150:g=15"  # دەنگی هاوسەنگ و ساف (دەنگی گۆرانییەکان یەکسان دەکات). نەتەوێت: ""
 DOWNLOAD_DIR = "downloads"
 
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -71,7 +73,26 @@ YTDL_OPTIONS = {
     },
 }
 
-FFMPEG_OPTIONS = {"options": "-vn"}
+def ffmpeg_options():
+    opts = "-vn"
+    if AUDIO_FILTER:
+        opts += f" -af {shlex.quote(AUDIO_FILTER)}"
+    return opts
+
+# بیتڕەیتی ڤۆیس بەرز دەکاتەوە بۆ ئەوپەڕی ڕێگەپێدراوی ژوورەکە، و دەنگ بۆ مۆدی میوزیک دادەنێت
+def tune_encoder(vc):
+    enc = getattr(vc, "encoder", None)
+    if not enc:
+        return
+    try:
+        enc.set_bitrate(max(64, min(512, (vc.channel.bitrate or 96000) // 1000)))
+    except Exception:
+        pass
+    for name, arg in (("set_signal_type", "music"), ("set_bandwidth", "full"), ("set_fec", True)):
+        try:
+            getattr(enc, name)(arg)
+        except Exception:
+            pass
 
 # ناوی دۆخەکانی دووبارەکردنەوە
 LOOP_TEXT = {"off": "ناچالاک", "song": "🔂 گۆرانی", "queue": "🔁 ڕیزبەندی"}
@@ -213,8 +234,9 @@ def _extract(query, download, guild_id=0):
     return data, path
 
 class AudioSource(discord.PCMVolumeTransformer):
-    def __init__(self, filepath, volume):
-        super().__init__(discord.FFmpegPCMAudio(filepath, **FFMPEG_OPTIONS), volume)
+    def __init__(self, filepath, volume, start_at=0):
+        before = f"-ss {int(start_at)}" if start_at > 0 else None
+        super().__init__(discord.FFmpegPCMAudio(filepath, before_options=before, options=ffmpeg_options()), volume)
         self.filepath = filepath
 
 # stream ی ڕاستەوخۆ (بێ دابەزاندن). start_at = لە چەند چرکەوە دەست پێ بکات
@@ -226,7 +248,7 @@ def make_stream_source(data, start_at, volume):
         before += f" -ss {int(start_at)}"
     if hdr:
         before += f" -headers {shlex.quote(hdr)}"
-    source = discord.FFmpegPCMAudio(data["url"], before_options=before, options="-vn")
+    source = discord.FFmpegPCMAudio(data["url"], before_options=before, options=ffmpeg_options())
     return discord.PCMVolumeTransformer(source, volume)
 
 # دۆخی میوزیکی هەر سێرڤەرێک
@@ -695,11 +717,12 @@ class Music(commands.Cog):
         def after(error):
             if error:
                 print(f"هەڵەی لێدان: {error}")
-            asyncio.run_coroutine_threadsafe(self._after(guild, track), self.bot.loop)
+            asyncio.run_coroutine_threadsafe(self._after(guild, track, error), self.bot.loop)
 
         try:
-            source = make_stream_source(data, start_at, st.volume) if data else AudioSource(path, st.volume)
+            source = make_stream_source(data, start_at, st.volume) if data else AudioSource(path, st.volume, start_at)
             vc.play(source, after=after)
+            tune_encoder(vc)
         except Exception as e:
             st.current = None
             self.remove_file(track)
@@ -724,20 +747,20 @@ class Music(commands.Cog):
         if track.duration:
             st.progress_task = self.bot.loop.create_task(self.progress_loop(guild, track))
 
-    async def _after(self, guild, track):
+    async def _after(self, guild, track, error=None):
         st = self.states.get(guild.id)
         if st is None or st.current is not track:
             self.remove_file(track)
             return
-        # ئەگەر stream لە ناوەڕاستدا پچڕا، لەو شوێنەوە بەردەوام دەبێت
-        if self.is_stream(track) and not st.skipped:
+        # ئەگەر لە ناوەڕاستدا پچڕا (هەڵە یان stream ی پچڕاو)، لەو شوێنەوە بەردەوام دەبێت
+        if (error or self.is_stream(track)) and track.duration and not st.skipped:
             elapsed = st.elapsed()
             if track.duration - elapsed > 20:
                 if track.retries < MAX_STREAM_RETRIES:
                     track.retries += 1
                     return await self.start_track(guild, track, reuse=True, start_at=elapsed)
                 if st.channel:
-                    await st.channel.send(embed=warn_embed(f"stream ی **{trim(track.title, 60)}** پچڕا و نەگەڕایەوە."))
+                    await st.channel.send(embed=warn_embed(f"لێدانی **{trim(track.title, 60)}** پچڕا و نەگەڕایەوە."))
         keep = bool(st.loop == "song" and not st.skipped)
         if not keep:
             self.remove_file(track)
@@ -792,6 +815,8 @@ class Music(commands.Cog):
     # ─── دەرچوون و پاککردنەوە ───
 
     async def _idle(self, guild):
+        if STAY_IN_VOICE:
+            return
         try:
             await asyncio.sleep(IDLE_DISCONNECT)
         except asyncio.CancelledError:
@@ -806,6 +831,8 @@ class Music(commands.Cog):
                     "👋 چوومە دەرەوە", f"بەهۆی بێ‌چالاکی {IDLE_DISCONNECT // 60} خولەک.", color=WARN))
 
     async def _alone(self, guild):
+        if STAY_IN_VOICE:
+            return
         try:
             await asyncio.sleep(ALONE_DISCONNECT)
         except asyncio.CancelledError:
