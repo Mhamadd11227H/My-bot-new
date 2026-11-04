@@ -64,7 +64,24 @@ SUPPORT_URL = "https://discord.gg/GK6WZbxuUK"
 # ڕێگەپێدانەکان: 8 = Administrator. بۆ ڕێگەی کەمتر ژمارەیەکی تر دابنێ
 INVITE_PERMISSIONS = 8
 
-DIVIDER = "───────────────────────────"
+DIVIDER = "─" * 18
+
+# ناڤ و وەسفێ کورت بۆ لاپەڕەی سەرەکی (ب هێڵەک). بەشێ نوی؟ لێرە ژی زێدە بکە
+HOME_INFO = {
+    "general": ("گشتی", "فەرمانێن سادە"),
+    "info":    ("زانیاری", "ئەندام و سێرڤەر"),
+    "economy": ("ئابووری و بانک", "دراڤ، daily و بانک"),
+    "hunt":    ("ڕاوکردن", "ئاژەل و Huntbot"),
+    "games":   ("یاری", "یاریێن ب دراڤ"),
+    "setup":   ("ڕێکخستن", "Welcome و Invite و Left"),
+    "mod":     ("مۆدەراسیۆن", "تەنێ بۆ بەرپرسان"),
+}
+
+def home_title(key):
+    return HOME_INFO.get(key, (CATEGORIES[key]["title"], ""))[0]
+
+def home_short(key):
+    return HOME_INFO.get(key, ("", CATEGORIES[key]["desc"]))[1]
 
 # ═══════════════════════════════════════
 # بەشی ٢: لیستی بەشەکان و فەرمانەکان
@@ -469,29 +486,28 @@ def render(text):
 # کارتی لاپەڕەی سەرەکی
 def home_embed(ctx, invite_url):
     total = sum(len(c["commands"]) for c in CATEGORIES.values())
+    name = discord.utils.escape_markdown(ctx.author.display_name)
+    cats = "\n".join(
+        f"{c['emoji']} **{home_title(k)}** ─ {home_short(k)}" for k, c in CATEGORIES.items()
+    )
+    names = " ‧ ".join(f"`{n}`" for n in [PREFIX] + [p for p in EXTRA_PREFIXES if p.lower() != PREFIX.lower()])
     embed = make_embed(
-        f"🌟✨  ڕێنمایی فەرمانەکانی {BOT_NAME}  ✨🌟",
+        f"{BOT_NAME} ─ ناوەندی یارمەتی",
         (
-            f"**هێماکانی بەکارهێنان:** {prefixes_text()}\n"
-            f"💡 *نموونە:* `{PREFIX} daily` یان `{PREFIX} slots 100`\n\n"
-            f"{DIVIDER}\n"
-            "📂 **بەشەکان**\n"
-            + "\n".join(
-                f"{c['emoji']} **{c['title']}** ── {c['desc']}  `{len(c['commands'])}`"
-                for c in CATEGORIES.values()
-            )
-            + f"\n{DIVIDER}\n"
-            f"🔗 **زیادکردنی بوت:** [کلیک بکە]({invite_url})\n"
-            + (f"🛡️ **سێرڤەری ساپۆرت:** [کلیک بکە]({SUPPORT_URL})\n" if SUPPORT_URL else "")
+            f"👋 سڵاو **{name}**!\n"
+            f"ژ لیستا خوارێ **بەشەکێ هەلبژێرە** دا فەرمانێن وێ ببینی.\n\n"
+            f"{DIVIDER}\n{cats}\n{DIVIDER}\n\n"
+            f"🚀 **دەستپێک:** `{PREFIX} daily` ‧ `{PREFIX} bank` ‧ `{PREFIX} slots 100`\n"
+            f"🔑 **هێما:** {names}"
         ),
         color=0x5865F2,
         ctx=ctx,
     )
-    embed.set_author(name=f"{BOT_NAME} • ناوەندی یارمەتی", icon_url=ctx.bot.user.display_avatar.url)
+    embed.set_author(name=f"{BOT_NAME} • یارمەتی", icon_url=ctx.bot.user.display_avatar.url)
     embed.add_field(name="⚡ خێرایی", value=f"`{round(ctx.bot.latency * 1000)}ms`")
     embed.add_field(name="📌 فەرمان", value=f"`{total}`")
     if ctx.guild:
-        embed.add_field(name="👥 ئەندامان", value=f"`{ctx.guild.member_count}`")
+        embed.add_field(name="👥 ئەندام", value=f"`{ctx.guild.member_count}`")
     src = gif_source()
     if src:
         embed.set_image(url=src)
@@ -500,12 +516,12 @@ def home_embed(ctx, invite_url):
 # کارتی هەر بەشێک
 def category_embed(ctx, key):
     c = CATEGORIES[key]
-    lines = "\n".join(
-        f"▫️ **`{render(cmd)}`** ── {render(text)}" for cmd, text in c["commands"]
+    lines = "\n\n".join(
+        f"`{render(cmd)}`\n┕ {render(text)}" for cmd, text in c["commands"]
     )
     embed = make_embed(
         f"{c['emoji']}  {c['title']}",
-        f"> {c['desc']}\n{DIVIDER}\n{lines}\n{DIVIDER}",
+        f"> {c['desc']}\n{DIVIDER}\n{lines}",
         color=c["color"],
         ctx=ctx,
     )
@@ -609,7 +625,10 @@ class CategorySelect(discord.ui.Select):
         ]
         for key, c in CATEGORIES.items():
             options.append(
-                discord.SelectOption(label=c["title"], value=key, emoji=c["emoji"], description=c["desc"])
+                discord.SelectOption(
+                    label=home_title(key), value=key, emoji=c["emoji"],
+                    description=f"{home_short(key)} • {len(c['commands'])} فەرمان"[:100],
+                )
             )
         super().__init__(placeholder="📂 بەشێک هەڵبژێرە...", min_values=1, max_values=1, options=options, row=0)
 
