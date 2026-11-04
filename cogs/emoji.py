@@ -202,7 +202,7 @@ class EmojiCog(commands.Cog, name="Emoji"):
         items = ES.get_all()
         if not items:
             return await ctx.send(f"📭 هیچ ئیمۆجییەک نەگۆڕدراوە. بە `{PREFIX} emoji set 🐾` دەستپێبکە")
-        text = "\n".join(f"{_show(k)} ➜ {v['tag']}" for k, v in items.items())
+        text = "\n".join(f"{_show(k)} ➜ {v['tag']}" + (f" · **{v['name']}**" if v.get("name") else "") for k, v in items.items())
         if len(text) > 3900:
             text = text[:3900] + "\n…"
         await ctx.send(embed=make_embed(f"🎨  گۆڕانکارییەکان ({len(items)})", text, color=MAIN, ctx=ctx))
