@@ -40,6 +40,10 @@ QUEUE_PER_PAGE = 8            # چەند گۆرانی لە هەر پەڕەیەک
 MENU_IMAGE = None             # وێنەی داشبۆرد (لینک). ئەگەر نەتەوێت: None
 STAY_IN_VOICE = False         # True = بوت هەرگیز بە خۆی لە ڤۆیس دەرناچێت (٢٤/٧). تەنها بە z stop دەچێتە دەرەوە
 AUDIO_FILTER = "dynaudnorm=f=150:g=15"  # دەنگی هاوسەنگ و ساف (دەنگی گۆرانییەکان یەکسان دەکات). نەتەوێت: ""
+BIG_COVER = True              # True = وێنەی گۆرانی گەورە (وەک Spotify). False = وێنەی بچووک لە لاوە
+UPNEXT_SHOWN = 3              # چەند گۆرانی داهاتوو لە کارتەکەدا نیشان بدرێت
+SEEK_SECONDS = 10             # دوگمەکانی ⏪ / ⏩ چەند چرکە بپەڕێنن
+HISTORY_SIZE = 20             # چەند گۆرانی پێشوو بۆ دوگمەی ⏮️ هەڵبگیرێت
 DOWNLOAD_DIR = "downloads"
 
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -179,6 +183,26 @@ def progress_bar(elapsed, total, length=BAR_LENGTH):
     pos = min(int(length * ratio), length - 1)
     return "▬" * pos + "🔘" + "▬" * (length - pos - 1)
 
+# شریتی دەنگ: ▰▰▰▰▰▱▱▱
+def volume_bar(volume, length=8):
+    filled = min(max(round(volume / MAX_VOLUME * length), 0), length)
+    return "▰" * filled + "▱" * (length - filled)
+
+# z seek: "90" / "1:30" / "1:02:03" ڕاستەوخۆ، یان "+30" / "-15" بەرامبەر بە ئێستا
+def parse_seek(text, current):
+    text = text.strip()
+    sign = 0
+    if text and text[0] in "+-":
+        sign = 1 if text[0] == "+" else -1
+        text = text[1:]
+    parts = text.split(":")
+    if not 1 <= len(parts) <= 3 or not all(p.isdigit() for p in parts):
+        return None
+    secs = 0
+    for p in parts:
+        secs = secs * 60 + int(p)
+    return current + sign * secs if sign else secs
+
 # کارتی هەڵە / ئاگاداری / سەرکەوتن
 def error_embed(text, ctx=None):
     return make_embed("❌ هەڵە", text, color=ERROR, ctx=ctx)
@@ -265,6 +289,11 @@ class GuildState:
         self.paused_at = None
         self.paused_total = 0.0
         self.skipped = False
+        self.history = []          # گۆرانییە پێشووەکان (بۆ ⏮️)
+        self.override = None       # گۆرانییەک کە دەبێت دواتر ڕاستەوخۆ بلێت (⏮️ / جەمپ)
+        self.going_back = False
+        self.restart = False
+        self.seek_to = None        # ⏪ / ⏩ / z seek: لە چ چرکەیەکەوە دەست پێ بکاتەوە
         self.lock = asyncio.Lock()
         self.progress_task = None
         self.idle_task = None
@@ -283,11 +312,34 @@ class GuildState:
 # بەشی ٣: دوگمەکانی کۆنتڕۆڵ
 # ═══════════════════════════════════════
 
+class JumpSelect(discord.ui.Select):
+    def __init__(self, cog, tracks):
+        self.cog = cog
+        options = [
+            discord.SelectOption(
+                label=f"{n}. {trim(t.title, 90)}",
+                value=str(id(t)),
+                description=f"{trim(t.uploader, 40)} • {t.duration_str}",
+                emoji="🎵",
+            )
+            for n, t in enumerate(tracks, start=1)
+        ]
+        super().__init__(placeholder="🎯 گۆرانییەک لە ڕیزبەندی هەڵبژێرە و ڕاستەوخۆ لێیبدە...", options=options, row=2)
+
+    async def callback(self, interaction):
+        st = self.cog.states.get(interaction.guild.id)
+        track = next((t for t in st.queue if str(id(t)) == self.values[0]), None) if st else None
+        if track is None:
+            return await interaction.response.send_message("❌ ئەم گۆرانییە ئیتر لە ڕیزبەندیدا نییە.", ephemeral=True)
+        await interaction.response.defer()
+        self.cog.do_jump(interaction.guild, track)
+
 class MusicControls(discord.ui.View):
     def __init__(self, cog, guild_id):
         super().__init__(timeout=None)
         self.cog = cog
         self.guild_id = guild_id
+        self.jump = None
 
     # تەنها ئەو کەسانەی لە هەمان ڤۆیسدان دەتوانن کۆنتڕۆڵ بکەن
     async def interaction_check(self, interaction):
@@ -302,18 +354,38 @@ class MusicControls(discord.ui.View):
             return False
         return True
 
-    # دۆخی دوگمەکان لەگەڵ دۆخی ڕاستەقینە یەک دەخات
-    def sync(self, paused, loop):
+    # دۆخی دوگمەکان و لیستی جەمپ لەگەڵ دۆخی ڕاستەقینە یەک دەخات
+    def sync(self, paused, loop, queue):
         self.pause_btn.emoji = "▶️" if paused else "⏸️"
         self.pause_btn.style = discord.ButtonStyle.success if paused else discord.ButtonStyle.primary
         self.loop_btn.emoji = "🔂" if loop == "song" else "🔁"
         self.loop_btn.style = discord.ButtonStyle.secondary if loop == "off" else discord.ButtonStyle.success
+        if self.jump is not None:
+            self.remove_item(self.jump)
+            self.jump = None
+        if queue:
+            self.jump = JumpSelect(self.cog, queue[:25])
+            self.add_item(self.jump)
 
     async def _update(self, interaction):
         guild = interaction.guild
         st = self.cog.states[guild.id]
-        self.sync(guild.voice_client.is_paused(), st.loop)
+        self.sync(guild.voice_client.is_paused(), st.loop, st.queue)
         await interaction.response.edit_message(embed=self.cog.now_embed(guild, st), view=self)
+
+    # ڕیزی ١: 🔀 ⏮️ ⏯️ ⏭️ 🔁
+    @discord.ui.button(emoji="🔀", style=discord.ButtonStyle.secondary, row=0)
+    async def shuffle_btn(self, interaction, button):
+        st = self.cog.states[interaction.guild.id]
+        if len(st.queue) < 2:
+            return await interaction.response.send_message("❌ پێویستە لانی کەم ٢ گۆرانی لە ڕیزبەندیدا بێت.", ephemeral=True)
+        random.shuffle(st.queue)
+        await self._update(interaction)
+
+    @discord.ui.button(emoji="⏮️", style=discord.ButtonStyle.secondary, row=0)
+    async def prev_btn(self, interaction, button):
+        await interaction.response.defer()
+        self.cog.do_previous(interaction.guild)
 
     @discord.ui.button(emoji="⏸️", style=discord.ButtonStyle.primary, row=0)
     async def pause_btn(self, interaction, button):
@@ -326,7 +398,32 @@ class MusicControls(discord.ui.View):
         await interaction.response.defer()
         self.cog.do_skip(interaction.guild)
 
-    @discord.ui.button(emoji="⏹️", style=discord.ButtonStyle.danger, row=0)
+    @discord.ui.button(emoji="🔁", style=discord.ButtonStyle.secondary, row=0)
+    async def loop_btn(self, interaction, button):
+        st = self.cog.states[interaction.guild.id]
+        st.loop = LOOP_NEXT[st.loop]
+        await self._update(interaction)
+
+    # ڕیزی ٢: ⏪ 🔉 ⏹️ 🔊 ⏩
+    async def _seek(self, interaction, delta):
+        guild = interaction.guild
+        st = self.cog.states[guild.id]
+        if not st.current.duration:
+            return await interaction.response.send_message("❌ ماوەی ئەم گۆرانییە نەزانراوە.", ephemeral=True)
+        await interaction.response.defer()
+        self.cog.do_seek(guild, st.elapsed() + delta)
+
+    @discord.ui.button(emoji="⏪", style=discord.ButtonStyle.secondary, row=1)
+    async def back_btn(self, interaction, button):
+        await self._seek(interaction, -SEEK_SECONDS)
+
+    @discord.ui.button(emoji="🔉", style=discord.ButtonStyle.secondary, row=1)
+    async def vol_down_btn(self, interaction, button):
+        st = self.cog.states[interaction.guild.id]
+        self.cog.set_volume(interaction.guild.voice_client, st, st.volume - VOLUME_STEP)
+        await self._update(interaction)
+
+    @discord.ui.button(emoji="⏹️", style=discord.ButtonStyle.danger, row=1)
     async def stop_btn(self, interaction, button):
         await interaction.response.defer()
         guild = interaction.guild
@@ -335,36 +432,15 @@ class MusicControls(discord.ui.View):
         if channel:
             await channel.send(embed=warn_embed(f"⏹️ **{interaction.user.display_name}** میوزیکی ڕاگرت و بوت چووە دەرەوە."))
 
-    @discord.ui.button(emoji="🔁", style=discord.ButtonStyle.secondary, row=0)
-    async def loop_btn(self, interaction, button):
-        st = self.cog.states[interaction.guild.id]
-        st.loop = LOOP_NEXT[st.loop]
-        await self._update(interaction)
-
-    @discord.ui.button(emoji="🔀", style=discord.ButtonStyle.secondary, row=0)
-    async def shuffle_btn(self, interaction, button):
-        st = self.cog.states[interaction.guild.id]
-        if len(st.queue) < 2:
-            return await interaction.response.send_message("❌ پێویستە لانی کەم ٢ گۆرانی لە ڕیزبەندیدا بێت.", ephemeral=True)
-        random.shuffle(st.queue)
-        await self._update(interaction)
-
-    @discord.ui.button(emoji="🔉", style=discord.ButtonStyle.secondary, row=1)
-    async def vol_down_btn(self, interaction, button):
-        st = self.cog.states[interaction.guild.id]
-        self.cog.set_volume(interaction.guild.voice_client, st, st.volume - VOLUME_STEP)
-        await self._update(interaction)
-
     @discord.ui.button(emoji="🔊", style=discord.ButtonStyle.secondary, row=1)
     async def vol_up_btn(self, interaction, button):
         st = self.cog.states[interaction.guild.id]
         self.cog.set_volume(interaction.guild.voice_client, st, st.volume + VOLUME_STEP)
         await self._update(interaction)
 
-    @discord.ui.button(emoji="📜", label="ڕیزبەندی", style=discord.ButtonStyle.secondary, row=1)
-    async def queue_btn(self, interaction, button):
-        view = QueueView(self.cog, interaction.guild.id)
-        await interaction.response.send_message(embed=view.build(), view=view, ephemeral=True)
+    @discord.ui.button(emoji="⏩", style=discord.ButtonStyle.secondary, row=1)
+    async def fwd_btn(self, interaction, button):
+        await self._seek(interaction, SEEK_SECONDS)
 
 # ═══════════════════════════════════════
 # بەشی ٤: ڕیزبەندی (پەڕە بە پەڕە)
@@ -543,6 +619,45 @@ class Music(commands.Cog):
             st.skipped = True
             vc.stop()
 
+    # ⏮️ ئەگەر زیاتر لە ٥ چرکە لێدرابێت، هەمان گۆرانی لە سەرەتاوە. ئەگەر نا، گۆرانی پێشوو
+    def do_previous(self, guild):
+        st = self.states.get(guild.id)
+        vc = guild.voice_client
+        if not st or not st.current or not vc:
+            return
+        if st.elapsed() > 5 or not st.history:
+            st.restart = True
+        else:
+            back = st.history.pop()
+            st.queue.insert(0, st.current)
+            st.override = back
+            st.going_back = True
+            st.skipped = True
+        vc.stop()
+
+    # 🎯 ڕاستەوخۆ بچۆ سەر گۆرانییەک لە ڕیزبەندی
+    def do_jump(self, guild, track):
+        st = self.states.get(guild.id)
+        vc = guild.voice_client
+        if not st or not vc or track not in st.queue:
+            return
+        st.queue.remove(track)
+        st.override = track
+        st.skipped = True
+        vc.stop()
+
+    # ⏪ / ⏩ / z seek: هەمان گۆرانی لە چرکەیەکی تر دەست پێ دەکاتەوە
+    def do_seek(self, guild, position):
+        st = self.states.get(guild.id)
+        vc = guild.voice_client
+        if not st or not st.current or not vc or not st.current.duration:
+            return False
+        if not (vc.is_playing() or vc.is_paused()):
+            return False
+        st.seek_to = int(min(max(position, 0), max(st.current.duration - 2, 0)))
+        vc.stop()
+        return True
+
     # ─── کارتی "ئێستا لێدەدرێت" ───
 
     def now_embed(self, guild, st):
@@ -554,28 +669,33 @@ class Music(commands.Cog):
             elapsed = min(elapsed, t.duration)
 
         desc = (
+            f"### [{trim(t.title, 200)}]({t.url})\n"
+            f"**{trim(t.uploader, 60)}**\n\n"
             f"{'⏸️' if paused else '▶️'}  `{fmt_time(elapsed)}`  "
-            f"{progress_bar(elapsed, t.duration)}  `{t.duration_str}`"
+            f"{progress_bar(elapsed, t.duration)}  `{t.duration_str}`\n\n"
+            f"🔊 {volume_bar(st.volume)} `{int(st.volume * 100)}%`  ┃  {LOOP_TEXT[st.loop] if st.loop != 'off' else '🔁 ناچالاک'}"
+            f"  ┃  📋 `{len(st.queue)}` لە ڕیزبەندیدا"
         )
-        embed = make_embed(f"🎶 {trim(t.title, 240)}", desc, color=GOLD if paused else PURPLE)
-        embed.url = t.url
+        if st.queue:
+            lines = [
+                f"`{n}` {trim(q.title, 48)} ┃ `{q.duration_str}`"
+                for n, q in enumerate(st.queue[:UPNEXT_SHOWN], start=1)
+            ]
+            desc += "\n\n**⏭️ داهاتوو**\n" + "\n".join(lines)
+            if len(st.queue) > UPNEXT_SHOWN:
+                desc += f"\n*و {len(st.queue) - UPNEXT_SHOWN} گۆرانی تر...*"
+
+        embed = make_embed("", desc, color=GOLD if paused else PURPLE)
+        embed.title = None
         embed.set_author(
             name="وەستێنراوە • Paused" if paused else "ئێستا لێدەدرێت • Now Playing",
             icon_url=self.bot.user.display_avatar.url,
         )
         if t.thumbnail:
-            embed.set_thumbnail(url=t.thumbnail)
-
-        embed.add_field(name="🎙️ بڵاوکار", value=f"**{trim(t.uploader, 28)}**")
-        embed.add_field(name="🔊 دەنگ", value=f"`{int(st.volume * 100)}%`")
-        embed.add_field(name="🔁 دووبارە", value=LOOP_TEXT[st.loop])
-        if st.queue:
-            nxt = st.queue[0]
-            embed.add_field(
-                name=f"📋 ڕیزبەندی ({len(st.queue)})",
-                value=f"⏭️ داهاتوو: [{trim(nxt.title, 50)}]({nxt.url})",
-                inline=False,
-            )
+            if BIG_COVER:
+                embed.set_image(url=t.thumbnail)
+            else:
+                embed.set_thumbnail(url=t.thumbnail)
         embed.set_footer(
             text=f"داواکراوە لەلایەن {t.requester.display_name} • {BOT_NAME} Music",
             icon_url=t.requester.display_avatar.url,
@@ -587,7 +707,7 @@ class Music(commands.Cog):
         if not st or not st.message or not st.current or not st.view:
             return
         vc = guild.voice_client
-        st.view.sync(bool(vc and vc.is_paused()), st.loop)
+        st.view.sync(bool(vc and vc.is_paused()), st.loop, st.queue)
         try:
             await st.message.edit(embed=self.now_embed(guild, st), view=st.view)
         except discord.HTTPException:
@@ -682,6 +802,7 @@ class Music(commands.Cog):
             icon_url=member.display_avatar.url,
         )
         await status.edit(embed=embed)
+        await self.refresh_message(guild)
 
     async def download(self, track, guild_id):
         if track.filepath and os.path.exists(track.filepath):
@@ -733,11 +854,13 @@ class Music(commands.Cog):
         st.reset_clock()
         st.started_at -= start_at
         view = MusicControls(self, guild.id)
+        view.sync(False, st.loop, st.queue)
         embed = self.now_embed(guild, st)
         if (reuse or start_at) and st.message:
             try:
-                await st.message.edit(embed=embed, view=st.view or view)
                 view = st.view or view
+                view.sync(False, st.loop, st.queue)
+                await st.message.edit(embed=embed, view=view)
             except discord.HTTPException:
                 st.message = await st.channel.send(embed=embed, view=view)
         else:
@@ -752,8 +875,12 @@ class Music(commands.Cog):
         if st is None or st.current is not track:
             self.remove_file(track)
             return
+        # seek: هەمان گۆرانی لە شوێنی نوێوە دەست پێ دەکاتەوە (فایلەکە ناسڕدرێتەوە)
+        if st.seek_to is not None:
+            pos, st.seek_to = st.seek_to, None
+            return await self.start_track(guild, track, reuse=True, start_at=pos)
         # ئەگەر لە ناوەڕاستدا پچڕا (هەڵە یان stream ی پچڕاو)، لەو شوێنەوە بەردەوام دەبێت
-        if (error or self.is_stream(track)) and track.duration and not st.skipped:
+        if (error or self.is_stream(track)) and track.duration and not st.skipped and not st.restart and st.override is None:
             elapsed = st.elapsed()
             if track.duration - elapsed > 20:
                 if track.retries < MAX_STREAM_RETRIES:
@@ -761,7 +888,7 @@ class Music(commands.Cog):
                     return await self.start_track(guild, track, reuse=True, start_at=elapsed)
                 if st.channel:
                     await st.channel.send(embed=warn_embed(f"لێدانی **{trim(track.title, 60)}** پچڕا و نەگەڕایەوە."))
-        keep = bool(st.loop == "song" and not st.skipped)
+        keep = bool((st.loop == "song" and not st.skipped) or st.restart)
         if not keep:
             self.remove_file(track)
         await self.play_next(guild)
@@ -775,17 +902,30 @@ class Music(commands.Cog):
             return await self.cleanup(guild.id)
 
         prev = st.current
+        going_back = st.going_back
         nxt = None
-        if prev and st.loop == "song" and not st.skipped:
+        if st.override is not None:
+            nxt = st.override
+            if prev and st.loop == "queue" and not going_back:
+                st.queue.append(prev)
+        elif prev and st.restart:
+            nxt = prev
+        elif prev and st.loop == "song" and not st.skipped:
             nxt = prev
         elif prev and st.loop == "queue":
             st.queue.append(prev)
         if nxt is None and st.queue:
             nxt = st.queue.pop(0)
 
+        st.override = None
+        st.going_back = False
         reuse = nxt is not None and nxt is prev
         if prev and not reuse:
+            if not going_back:
+                st.history.append(prev)
+                del st.history[:-HISTORY_SIZE]
             await self.finish_message(st, prev)
+        st.restart = False
         st.skipped = False
         st.current = nxt
 
@@ -1066,6 +1206,42 @@ class Music(commands.Cog):
         st.queue.clear()
         await self.refresh_message(ctx.guild)
         await ctx.send(embed=ok_embed("🧹 ڕیزبەندی پاک کرایەوە", f"**{count}** گۆرانی لابرا.", ctx=ctx))
+
+    # z previous
+    @commands.command(name="previous", aliases=["prev", "back"])
+    async def previous(self, ctx):
+        res = await self.check(ctx)
+        if not res:
+            return
+        self.do_previous(ctx.guild)
+        await ctx.message.add_reaction("⏮️")
+
+    # z jump <ژمارە>
+    @commands.command(name="jump", aliases=["skipto"])
+    async def jump(self, ctx, number: int):
+        res = await self.check(ctx)
+        if not res:
+            return
+        st, _ = res
+        if not 1 <= number <= len(st.queue):
+            return await ctx.send(embed=error_embed(f"ژمارەیەک لە نێوان `1` و `{len(st.queue)}` بنووسە."), delete_after=8)
+        self.do_jump(ctx.guild, st.queue[number - 1])
+        await ctx.message.add_reaction("🎯")
+
+    # z seek <1:30 / 90 / +30 / -15>
+    @commands.command(name="seek", aliases=["goto"])
+    async def seek(self, ctx, *, position: str = None):
+        res = await self.check(ctx)
+        if not res:
+            return
+        st, _ = res
+        target = parse_seek(position, st.elapsed()) if position else None
+        if target is None or not st.current.duration:
+            return await ctx.send(embed=ok_embed(
+                "⏩ Seek",
+                f"`{PREFIX} seek 1:30` ‧ `{PREFIX} seek 90` ‧ `{PREFIX} seek +30` ‧ `{PREFIX} seek -15`", ctx=ctx), delete_after=12)
+        if self.do_seek(ctx.guild, target):
+            await ctx.message.add_reaction("⏩")
 
     # z menu
     @commands.command(name="menu", aliases=["songs", "artists", "playlist"])
