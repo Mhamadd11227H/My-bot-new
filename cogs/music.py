@@ -1865,7 +1865,7 @@ class Music(commands.Cog):
         view.message = await ctx.send(embed=view.build(), view=view)
 
     # z menu
-    @commands.command(name="menu", aliases=["songs", "artists", "playlist"])
+    @commands.command(name="menu", aliases=["songs", "artists"])
     async def menu(self, ctx):
         if not ctx.author.voice:
             return await ctx.send(embed=error_embed("سەرەتا بچۆ ناو ڤۆیسێک."), delete_after=8)
