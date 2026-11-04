@@ -28,9 +28,15 @@ GIF_URL = (
     "zero_bot_neon_animated.gif?ex=6a81dd4f&is=6a808bcf&hm=f240b7bcd96096c6456901a297d5a99926ef47a7c37595cc65a9f9f0bcb0b960&"
 )
 
-# باشترین چارەسەر: فایلی zero.gif لەناو فۆڵدەری بوتەکە دابنێ (لەتەنیشت bot.py یان لەناو cogs)
-# بوتەکە خۆی دەیبینێتەوە و وەک فایل دەینێرێت، بۆیە هەرگیز لینکەکەی ناکوژێتەوە.
-# ئەگەر فایلەکە نەبوو، GIF_URL ی سەرەوە بەکاردێت
+# وێنەی هەموو لاپەڕەکان. ڕیزبەندی:
+# ١. ئەو وێنەیەی بە فەرمانی  z media set help <ناو>  دیاریت کردووە (باشترین ڕێگا)
+# ٢. فایلی zero.gif ئەگەر لەتەنیشت bot.py یان لەناو cogs دانرابوو
+# ٣. GIF_URL ی سەرەوە
+try:
+    from media_store import slot_file
+except Exception:
+    slot_file = lambda slot: None
+
 def _find_gif():
     here = os.path.dirname(os.path.abspath(__file__))
     for folder in (here, os.path.dirname(here)):
@@ -39,10 +45,17 @@ def _find_gif():
             return path
     return None
 
-GIF_FILE = _find_gif()
+def current_media():
+    """(path, filename) ی وێنەی ئێستا، یان (None, None)"""
+    found = slot_file("help")
+    if found:
+        return found
+    path = _find_gif()
+    return (path, "zero.gif") if path else (None, None)
 
 def gif_source():
-    return "attachment://zero.gif" if GIF_FILE else GIF_URL
+    path, filename = current_media()
+    return f"attachment://{filename}" if path else GIF_URL
 
 # دوگمەی سێرڤەری ساپۆرت (ئەگەر نەتەوێت: None)
 SUPPORT_URL = "https://discord.gg/GK6WZbxuUK"
@@ -719,7 +732,8 @@ class HelpCog(commands.Cog):
             f"&permissions={INVITE_PERMISSIONS}&integration_type=0&scope=bot"
         )
         view = HelpView(ctx, invite_url)
-        file = discord.File(GIF_FILE, filename="zero.gif") if GIF_FILE else None
+        path, filename = current_media()
+        file = discord.File(path, filename=filename) if path else None
         view.message = await ctx.send(embed=home_embed(ctx, invite_url), view=view, file=file)
 
 async def setup(bot):
