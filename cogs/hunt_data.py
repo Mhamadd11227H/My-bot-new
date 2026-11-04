@@ -156,6 +156,13 @@ GEMS = {
     "fabled":    dict(name="Fabled Gem",    emoji="🤍", animals=9, durability=100),
 }
 
+# luck ی زیادە کە هەر gem ێک دەیدات (gem ی باشتر = ئاژەڵی دەگمەنتر)
+# 0.10 = +٪١٠ شانسی ئاژەڵی دەگمەن. بۆ ناچالاککردن هەمووی بکە بە 0
+GEM_LUCK = {
+    "common": 0.00, "uncommon": 0.05, "rare": 0.10, "epic": 0.20,
+    "mythical": 0.30, "legendary": 0.45, "fabled": 0.60,
+}
+
 # ═══════════════════════════════════════
 # بەشی ٥: ئایتم و buff
 # kind: luck / xp / essence / catch / discount / lure_<category>

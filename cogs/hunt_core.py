@@ -505,7 +505,7 @@ def perform_hunt(uid):
 
         # gem ی چالاک
         gem = db.execute(
-            "SELECT g.gem_uid, g.tier, g.durability, h.animals, h.name, h.emoji FROM player_gems g "
+            "SELECT g.gem_uid, g.tier, g.durability, h.animals, h.name, h.emoji, h.durability FROM player_gems g "
             "JOIN hunting_gems h ON h.tier=g.tier WHERE g.user_id=? AND g.active=1", (uid,)).fetchone()
         extra = (gem[3] if gem else 0) + (int(buffs["catch"][0]) if "catch" in buffs else 0)
         n = 1 + extra
@@ -517,6 +517,8 @@ def perform_hunt(uid):
             return {"error": "no_cash", "cost": cost, "balance": bal}
 
         luck = (buffs["luck"][0] if "luck" in buffs else 0.0) + sum(D.EVENTS[k]["luck"] for k in events)
+        if gem:  # gem ی باشتر = شانسی ئاژەڵی دەگمەنتر
+            luck += getattr(D, "GEM_LUCK", {}).get(gem[1], 0.0)
         table = rarity_table(luck)
         lure = _lure_from(buffs)
         caught = [roll_animal(table, lure, events) for _ in range(n)]
@@ -533,7 +535,8 @@ def perform_hunt(uid):
                 db.execute("DELETE FROM player_gems WHERE gem_uid=?", (gem[0],))
             else:
                 db.execute("UPDATE player_gems SET durability=? WHERE gem_uid=?", (left, gem[0]))
-            gem_info = dict(uid=gem[0], name=gem[4], emoji=gem[5], left=max(left, 0), expired=left <= 0)
+            gem_info = dict(uid=gem[0], name=gem[4], emoji=gem[5], left=max(left, 0), expired=left <= 0,
+                            max=max(gem[6], gem[2]), tier=gem[1])
 
         # XP ی team
         base_xp = sum(a["xp"] for a in caught)

@@ -68,6 +68,61 @@ def split_animal_rest(tokens):
 # ═══════════════════════════════════════
 # Embed ی hunt
 # ═══════════════════════════════════════
+def reset_in():
+    """ماوەی ماوە تا ڕەستکردنەوەی ڕۆژانە (٠٠:٠٠ UTC)، بەشێوەی 7H 21M 46S"""
+    left = int(86400 - (time.time() % 86400))
+    hh, rem = divmod(left, 3600)
+    mm, ss = divmod(rem, 60)
+    return f"{hh}H {mm}M {ss}S"
+
+
+def hunt_message(ctx, r):
+    """نامەی hunt بە شێوازی OwO: کورت، ڕێک، و بێ embed"""
+    uid = ctx.author.id
+    name = esc(ctx.author.display_name)
+    pad = "\u3000\u3000| "
+    animals = sorted(r["animals"], key=lambda a: (D.RARITY_RANK[a["rarity"]], a["name"]))
+    found = " ".join(a["emoji"] for a in animals)
+
+    g = r["gem"]
+    lines = []
+    if g:
+        lines.append(f"🌱 | **{name}**, hunt is empowered by {g['emoji']} `[{g['left']}/{g['max']}]` !")
+        lines.append(f"{pad}You found: {found}")
+    else:
+        lines.append(f"🌱 | **{name}**, you found: {found}")
+
+    # ئاژەڵی نوێ و کاریگەری rarity ی بەرزترین ئاژەڵ
+    new_names = [f"{a['emoji']} {a['name']}" for a in animals if a["id"] in r["new"]]
+    if new_names:
+        lines.append(f"{pad}🆕 New: {', '.join(dict.fromkeys(new_names))}")
+    effect = rar(animals[-1])["effect"]
+    if effect:
+        lines.append(f"{pad}**{effect}**")
+
+    # XP ی team
+    team = C.get_team(uid)
+    if team and r["team_xp"] > 0:
+        lines.append(f"{pad}{' '.join(t['animal']['emoji'] for t in team)} gained **{r['team_xp']:,}xp**!")
+    lines += [f"{pad}{x}" for x in level_up_lines(r["level_ups"])]
+
+    # gem شکا
+    if g and g["expired"]:
+        lines.append(f"💨 | Your {g['emoji']} **{g['name']}** has broken!")
+
+    # event ە چالاکەکان
+    if r["events"]:
+        lines.append(f"{pad}" + " ".join(f"{D.EVENTS[k]['emoji']} **{D.EVENTS[k]['name']}**" for k in r["events"]))
+
+    # lootbox: تەنها کاتێک دەرچوو
+    if r["box"]:
+        today = min(r["box"][0], D.DAILY_BOX_TARGET)
+        lines.append(f"📦 | You found a **lootbox**! `[{today}/{D.DAILY_BOX_TARGET}]` RESETS IN: `{reset_in()}`")
+        if r["box"][1]:
+            lines.append(f"🏅 | Daily checklist complete! **+{r['box'][1]:,} {CURRENCY}**")
+    return "\n".join(lines)
+
+
 def hunt_embed(ctx, r):
     animals = r["animals"]
     top = max(animals, key=lambda a: D.RARITY_RANK[a["rarity"]])
@@ -394,7 +449,7 @@ class Hunt(commands.Cog):
             await ctx.send(f"⚠️ | **{name}**, you need **{r['cost']} {CURRENCY}** to hunt! "
                            f"(You have `{r['balance']:,}`) Use `{PREFIX} daily`.")
         else:
-            await ctx.send(embed=hunt_embed(ctx, r))
+            await ctx.send(hunt_message(ctx, r))
 
     # ═══════════ ZOO ═══════════
     @commands.command(name="zoo", aliases=["animals"])
