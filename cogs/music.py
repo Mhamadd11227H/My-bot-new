@@ -3,6 +3,7 @@ import math
 import os
 import random
 import shlex
+import sqlite3
 import time
 from dataclasses import dataclass
 from typing import Optional
@@ -11,6 +12,7 @@ import discord
 from discord.ext import commands
 import yt_dlp
 
+from database import db
 from utils import make_embed, PREFIX, BOT_NAME, PURPLE, GOLD, SUCCESS, ERROR, WARN
 
 # ═══════════════════════════════════════
@@ -44,6 +46,11 @@ BIG_COVER = True              # True = وێنەی گۆرانی گەورە (وە�
 UPNEXT_SHOWN = 3              # چەند گۆرانی داهاتوو لە کارتەکەدا نیشان بدرێت
 SEEK_SECONDS = 10             # دوگمەکانی ⏪ / ⏩ چەند چرکە بپەڕێنن
 HISTORY_SIZE = 20             # چەند گۆرانی پێشوو بۆ دوگمەی ⏮️ هەڵبگیرێت
+MAX_PLAYLISTS = 10            # هەر کەسێک چەند لیستی خۆی دروست بکات
+MAX_PLAYLIST_TRACKS = 100     # زۆرترین گۆرانی لە یەک لیستدا
+MAX_PLAYLIST_NAME = 30        # زۆرترین پیتی ناوی لیست
+RECENT_LIMIT = 25             # چەند گۆرانی کۆتا هەڵبگیرێت (Recently Played)
+LIB_PER_PAGE = 8              # چەند گۆرانی لە هەر پەڕەیەکی کتێبخانە
 DOWNLOAD_DIR = "downloads"
 
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -442,6 +449,29 @@ class MusicControls(discord.ui.View):
     async def fwd_btn(self, interaction, button):
         await self._seek(interaction, SEEK_SECONDS)
 
+    # ڕیزی ٤: ❤️ Like ┃ 💾 پاشەکەوت بۆ لیست
+    @discord.ui.button(emoji="❤️", label="Like", style=discord.ButtonStyle.secondary, row=3)
+    async def like_btn(self, interaction, button):
+        track = self.cog.states[interaction.guild.id].current
+        res = lib_toggle_fav(interaction.user.id, track)
+        text = {
+            "added": "❤️ زیاد کرا بۆ **Favorites**ـەکانت.",
+            "removed": "💔 لە **Favorites**ـەکانت لابرا.",
+            "full": f"❌ Favorites پڕە (**{MAX_PLAYLIST_TRACKS}** گۆرانی).",
+        }[res]
+        await interaction.response.send_message(text, ephemeral=True)
+
+    @discord.ui.button(emoji="💾", label="پاشەکەوت", style=discord.ButtonStyle.secondary, row=3)
+    async def save_btn(self, interaction, button):
+        track = self.cog.states[interaction.guild.id].current
+        pls = lib_custom(interaction.user.id)
+        if not pls:
+            return await interaction.response.send_message(
+                f"❌ هیچ لیستێکت نییە. `{PREFIX} playlist` بنووسە و دوگمەی ➕ دابگرە.", ephemeral=True)
+        view = discord.ui.View(timeout=60)
+        view.add_item(SaveSelect(track, pls))
+        await interaction.response.send_message("💾 بۆ کام لیست پاشەکەوت بکەم؟", view=view, ephemeral=True)
+
 # ═══════════════════════════════════════
 # بەشی ٤: ڕیزبەندی (پەڕە بە پەڕە)
 # ═══════════════════════════════════════
@@ -547,6 +577,441 @@ class ArtistView(discord.ui.View):
                 await self.message.edit(view=self)
             except discord.HTTPException:
                 pass
+
+# ═══════════════════════════════════════
+# بەشی ٥ب: کتێبخانەی میوزیک ─ Favorites / Recently Played / Playlists
+# هەموو شتێک لە هەمان economy.db دا هەڵدەگیرێت (بۆیە backup ـەکەی بوتەکە دەیگرێتەوە)
+# ═══════════════════════════════════════
+
+db.execute(
+    "CREATE TABLE IF NOT EXISTS music_playlists ("
+    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+    "user_id INTEGER NOT NULL, name TEXT NOT NULL, "
+    "is_fav INTEGER NOT NULL DEFAULT 0, created REAL NOT NULL)"
+)
+db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_music_pl_name ON music_playlists(user_id, name COLLATE NOCASE)")
+db.execute(
+    "CREATE TABLE IF NOT EXISTS music_playlist_tracks ("
+    "id INTEGER PRIMARY KEY AUTOINCREMENT, playlist_id INTEGER NOT NULL, "
+    "title TEXT, url TEXT NOT NULL, duration INTEGER NOT NULL DEFAULT 0, "
+    "uploader TEXT, thumbnail TEXT, added REAL NOT NULL)"
+)
+db.execute("CREATE INDEX IF NOT EXISTS idx_music_plt_pl ON music_playlist_tracks(playlist_id)")
+db.execute(
+    "CREATE TABLE IF NOT EXISTS music_recent ("
+    "id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, "
+    "title TEXT, url TEXT NOT NULL, duration INTEGER NOT NULL DEFAULT 0, "
+    "uploader TEXT, thumbnail TEXT, played REAL NOT NULL)"
+)
+db.execute("CREATE INDEX IF NOT EXISTS idx_music_recent_user ON music_recent(user_id, played)")
+db.commit()
+
+FAV_TITLE = "❤️ Favorites"
+RESERVED_NAMES = {"favorites", "favorite", "favs", "fav", "like", "likes", "liked", "love",
+                  "recent", "recently", "recently played", "history", "❤️ favorites"}
+FAV_WORDS = {"fav", "favs", "favorite", "favorites", "like", "likes", "liked", "love"}
+RECENT_WORDS = {"recent", "recently", "history"}
+
+@dataclass
+class LibRef:
+    kind: str       # fav / recent / playlist
+    id: int
+    name: str
+    user_id: int
+
+    @property
+    def title(self):
+        if self.kind == "fav":
+            return FAV_TITLE
+        if self.kind == "recent":
+            return "🕘 Recently Played"
+        return f"🎼 {self.name}"
+
+def lib_fav_id(user_id):
+    row = db.execute("SELECT id FROM music_playlists WHERE user_id = ? AND is_fav = 1", (user_id,)).fetchone()
+    if row:
+        return row[0]
+    cur = db.execute(
+        "INSERT INTO music_playlists (user_id, name, is_fav, created) VALUES (?, ?, 1, ?)",
+        (user_id, FAV_TITLE, time.time()),
+    )
+    db.commit()
+    return cur.lastrowid
+
+# لیستەکانی کەسێک (بێ Favorites): (id, name, ژمارەی گۆرانی)
+def lib_custom(user_id):
+    return db.execute(
+        "SELECT p.id, p.name, (SELECT COUNT(*) FROM music_playlist_tracks t WHERE t.playlist_id = p.id) "
+        "FROM music_playlists p WHERE p.user_id = ? AND p.is_fav = 0 ORDER BY p.id",
+        (user_id,),
+    ).fetchall()
+
+def lib_count(playlist_id):
+    return db.execute("SELECT COUNT(*) FROM music_playlist_tracks WHERE playlist_id = ?", (playlist_id,)).fetchone()[0]
+
+def lib_recent_count(user_id):
+    return db.execute("SELECT COUNT(*) FROM music_recent WHERE user_id = ?", (user_id,)).fetchone()[0]
+
+# ناو یان ژمارە دەکات بە LibRef: fav / recent / ژمارەی لیست (وەک لە داشبۆرد) / ناوی لیست
+def lib_resolve(user_id, text):
+    t = " ".join(text.split()).lower()
+    if t in FAV_WORDS:
+        return LibRef("fav", lib_fav_id(user_id), FAV_TITLE, user_id)
+    if t in RECENT_WORDS:
+        return LibRef("recent", 0, "Recently Played", user_id)
+    pls = lib_custom(user_id)
+    if t.isdigit() and 1 <= int(t) <= len(pls):
+        pid, name, _ = pls[int(t) - 1]
+        return LibRef("playlist", pid, name, user_id)
+    for pid, name, _ in pls:
+        if name.lower() == t:
+            return LibRef("playlist", pid, name, user_id)
+    return None
+
+# گۆرانییەکانی لیستێک: (title, url, duration, uploader, thumbnail)
+def lib_tracks(ref):
+    if ref.kind == "recent":
+        return db.execute(
+            "SELECT title, url, duration, uploader, thumbnail FROM music_recent "
+            "WHERE user_id = ? ORDER BY played DESC, id DESC", (ref.user_id,)).fetchall()
+    return db.execute(
+        "SELECT title, url, duration, uploader, thumbnail FROM music_playlist_tracks "
+        "WHERE playlist_id = ? ORDER BY id", (ref.id,)).fetchall()
+
+# دەگەڕێنێتەوە: ok / exists / full
+def lib_add(playlist_id, track):
+    if db.execute("SELECT 1 FROM music_playlist_tracks WHERE playlist_id = ? AND url = ?",
+                  (playlist_id, track.url)).fetchone():
+        return "exists"
+    if lib_count(playlist_id) >= MAX_PLAYLIST_TRACKS:
+        return "full"
+    db.execute(
+        "INSERT INTO music_playlist_tracks (playlist_id, title, url, duration, uploader, thumbnail, added) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (playlist_id, track.title, track.url, track.duration, track.uploader, track.thumbnail, time.time()),
+    )
+    db.commit()
+    return "ok"
+
+# دەگەڕێنێتەوە: added / removed / full
+def lib_toggle_fav(user_id, track):
+    pid = lib_fav_id(user_id)
+    row = db.execute("SELECT id FROM music_playlist_tracks WHERE playlist_id = ? AND url = ?",
+                     (pid, track.url)).fetchone()
+    if row:
+        db.execute("DELETE FROM music_playlist_tracks WHERE id = ?", (row[0],))
+        db.commit()
+        return "removed"
+    return "added" if lib_add(pid, track) == "ok" else "full"
+
+# ژمارە (١ بۆ سەرەوە) دەگەڕێنێتەوە ناوی گۆرانی لابراو، یان None
+def lib_remove_track(playlist_id, number):
+    ids = [r[0] for r in db.execute(
+        "SELECT id FROM music_playlist_tracks WHERE playlist_id = ? ORDER BY id", (playlist_id,)).fetchall()]
+    if not 1 <= number <= len(ids):
+        return None
+    title = db.execute("SELECT title FROM music_playlist_tracks WHERE id = ?", (ids[number - 1],)).fetchone()[0]
+    db.execute("DELETE FROM music_playlist_tracks WHERE id = ?", (ids[number - 1],))
+    db.commit()
+    return title or "Unknown"
+
+# دەگەڕێنێتەوە: ok / invalid / reserved / limit / exists
+def lib_create(user_id, name):
+    name = " ".join(str(name).split())[:MAX_PLAYLIST_NAME]
+    if not name:
+        return "invalid"
+    if name.lower() in RESERVED_NAMES:
+        return "reserved"
+    if len(lib_custom(user_id)) >= MAX_PLAYLISTS:
+        return "limit"
+    try:
+        db.execute("INSERT INTO music_playlists (user_id, name, is_fav, created) VALUES (?, ?, 0, ?)",
+                   (user_id, name, time.time()))
+        db.commit()
+    except sqlite3.IntegrityError:
+        return "exists"
+    return "ok"
+
+def lib_delete(playlist_id):
+    db.execute("DELETE FROM music_playlist_tracks WHERE playlist_id = ?", (playlist_id,))
+    db.execute("DELETE FROM music_playlists WHERE id = ? AND is_fav = 0", (playlist_id,))
+    db.commit()
+
+# هەر گۆرانییەک دەست بە لێدان بکات، بۆ داواکارەکەی تۆمار دەکرێت (هەڵەی داتابەیس هەرگیز میوزیک ناوەستێنێت)
+def record_recent(user_id, track):
+    try:
+        db.execute("DELETE FROM music_recent WHERE user_id = ? AND url = ?", (user_id, track.url))
+        db.execute(
+            "INSERT INTO music_recent (user_id, title, url, duration, uploader, thumbnail, played) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (user_id, track.title, track.url, track.duration, track.uploader, track.thumbnail, time.time()),
+        )
+        db.execute(
+            "DELETE FROM music_recent WHERE user_id = ? AND id NOT IN "
+            "(SELECT id FROM music_recent WHERE user_id = ? ORDER BY played DESC, id DESC LIMIT ?)",
+            (user_id, user_id, RECENT_LIMIT),
+        )
+        db.commit()
+    except Exception as e:
+        print(f"هەڵەی Recently Played: {e}")
+
+def row_to_track(row, requester):
+    title, url, duration, uploader, thumbnail = row
+    return Track(title=title or "Unknown", url=url, duration=int(duration or 0),
+                 thumbnail=thumbnail, uploader=uploader or "—", requester=requester)
+
+CREATE_ERRORS = {
+    "invalid": "ناوی لیست بەتاڵە.",
+    "reserved": "ئەم ناوە تایبەتە (Favorites / Recent). ناوێکی تر هەڵبژێرە.",
+    "limit": f"زۆرترین **{MAX_PLAYLISTS}** لیست دەتوانیت هەبێت.",
+    "exists": "ئەم ناوە پێشتر هەیە.",
+}
+ADD_TEXT = {
+    "ok": "✅ زیاد کرا بۆ لیستەکە.",
+    "exists": "⚠️ ئەم گۆرانییە پێشتر لەو لیستەدایە.",
+    "full": f"❌ ئەو لیستە پڕە (**{MAX_PLAYLIST_TRACKS}** گۆرانی).",
+}
+
+# ─── پاشەکەوتکردنی گۆرانی ئێستا لە پلەیەر (💾) ───
+
+class SaveSelect(discord.ui.Select):
+    def __init__(self, track, pls):
+        self.track = track
+        options = [
+            discord.SelectOption(label=name[:100], value=str(pid), description=f"{cnt} گۆرانی", emoji="🎼")
+            for pid, name, cnt in pls
+        ]
+        super().__init__(placeholder="🎼 لیستێک هەڵبژێرە...", options=options)
+
+    async def callback(self, interaction):
+        pid = int(self.values[0])
+        owned = db.execute("SELECT 1 FROM music_playlists WHERE id = ? AND user_id = ? AND is_fav = 0",
+                           (pid, interaction.user.id)).fetchone()
+        if not owned:
+            return await interaction.response.edit_message(content="❌ ئەم لیستە ئیتر نییە.", view=None)
+        await interaction.response.edit_message(content=ADD_TEXT[lib_add(pid, self.track)], view=None)
+
+# ─── لیستی گۆرانییەکان (Favorites / Recent / Playlist) ───
+
+class LibTrackSelect(discord.ui.Select):
+    def __init__(self, lv, chunk, start):
+        self.lv = lv
+        options = [
+            discord.SelectOption(
+                label=f"{start + i}. {trim(r[0] or 'Unknown', 90)}",
+                value=str(start + i - 1),
+                description=trim(f"{r[3] or '—'} • {fmt_time(r[2]) if r[2] else '؟'}", 100),
+                emoji="🎵",
+            )
+            for i, r in enumerate(chunk, start=1)
+        ]
+        super().__init__(placeholder="🎧 گۆرانییەک هەڵبژێرە و لێیبدە...", options=options, row=1)
+
+    async def callback(self, interaction):
+        cog = self.lv.cog
+        if not await cog.ensure_voice(interaction):
+            return
+        rows = lib_tracks(self.lv.ref)
+        idx = int(self.values[0])
+        if idx >= len(rows):
+            return await interaction.response.send_message("❌ ئەم گۆرانییە ئیتر لەم لیستەدا نییە.", ephemeral=True)
+        await interaction.response.defer()
+        await cog.enqueue_saved(interaction.guild, interaction.channel, interaction.user,
+                                [rows[idx]], label=trim(rows[idx][0] or "", 60))
+
+class ListView(discord.ui.View):
+    def __init__(self, cog, owner, ref, page=0, dashboard=False):
+        super().__init__(timeout=180)
+        self.cog = cog
+        self.owner = owner
+        self.ref = ref
+        self.page = page
+        self.message = None
+        self.select = None
+        if not dashboard:
+            self.remove_item(self.home_btn)
+
+    # تەنها خاوەنی لیستەکە دەتوانێت بەکاری بهێنێت
+    async def interaction_check(self, interaction):
+        if interaction.user.id != self.owner.id:
+            await interaction.response.send_message(
+                f"❌ ئەم لیستە هی **{self.owner.display_name}**ـە. بۆ خۆت بنووسە `{PREFIX} playlist`.", ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+        if self.message:
+            try:
+                await self.message.edit(view=self)
+            except discord.HTTPException:
+                pass
+
+    def build(self):
+        rows = lib_tracks(self.ref)
+        pages = max(1, math.ceil(len(rows) / LIB_PER_PAGE))
+        self.page = min(max(self.page, 0), pages - 1)
+        start = self.page * LIB_PER_PAGE
+        chunk = rows[start:start + LIB_PER_PAGE]
+        self.prev_btn.disabled = self.page == 0
+        self.next_btn.disabled = self.page >= pages - 1
+        self.play_btn.disabled = self.shuffle_btn.disabled = not rows
+        if self.select is not None:
+            self.remove_item(self.select)
+            self.select = None
+        if chunk:
+            self.select = LibTrackSelect(self, chunk, start)
+            self.add_item(self.select)
+
+        if rows:
+            desc = "\n".join(
+                f"`{start + i:02d}` [{trim(r[0] or 'Unknown', 55)}]({r[1]}) ┃ `{fmt_time(r[2]) if r[2] else '؟'}`"
+                for i, r in enumerate(chunk, start=1)
+            )
+        elif self.ref.kind == "fav":
+            desc = f"*هێشتا هیچ Favorite ـێکت نییە.*\nکاتێک گۆرانییەک لێدەدرێت ❤️ دابگرە، یان `{PREFIX} like` بنووسە."
+        elif self.ref.kind == "recent":
+            desc = "*هێشتا هیچ گۆرانییەکت لێنەداوە.*"
+        else:
+            desc = f"*ئەم لیستە بەتاڵە.*\nگۆرانییەک لێبدە و 💾 دابگرە، یان `{PREFIX} pl add {self.ref.name}` بنووسە."
+
+        total = sum((r[2] or 0) for r in rows)
+        embed = make_embed(self.ref.title, desc, color=PURPLE)
+        embed.set_author(name=self.owner.display_name, icon_url=self.owner.display_avatar.url)
+        embed.set_footer(text=f"پەڕە {self.page + 1}/{pages} • {len(rows)} گۆرانی • {fmt_time(total)} • {BOT_NAME}")
+        return embed
+
+    @discord.ui.button(emoji="◀️", style=discord.ButtonStyle.secondary, row=0)
+    async def prev_btn(self, interaction, button):
+        self.page -= 1
+        await interaction.response.edit_message(embed=self.build(), view=self)
+
+    @discord.ui.button(emoji="▶️", style=discord.ButtonStyle.secondary, row=0)
+    async def next_btn(self, interaction, button):
+        self.page += 1
+        await interaction.response.edit_message(embed=self.build(), view=self)
+
+    @discord.ui.button(emoji="🎶", label="هەمووی لێبدە", style=discord.ButtonStyle.success, row=0)
+    async def play_btn(self, interaction, button):
+        if not await self.cog.ensure_voice(interaction):
+            return
+        await interaction.response.defer()
+        await self.cog.enqueue_saved(interaction.guild, interaction.channel, interaction.user,
+                                     lib_tracks(self.ref), label=self.ref.title)
+
+    @discord.ui.button(emoji="🔀", label="تێکەڵ", style=discord.ButtonStyle.primary, row=0)
+    async def shuffle_btn(self, interaction, button):
+        if not await self.cog.ensure_voice(interaction):
+            return
+        await interaction.response.defer()
+        await self.cog.enqueue_saved(interaction.guild, interaction.channel, interaction.user,
+                                     lib_tracks(self.ref), shuffle=True, label=self.ref.title)
+
+    @discord.ui.button(emoji="🏠", style=discord.ButtonStyle.secondary, row=0)
+    async def home_btn(self, interaction, button):
+        dash = DashboardView(self.cog, self.owner)
+        dash.message = interaction.message
+        await interaction.response.edit_message(embed=dash.build(), view=dash)
+
+# ─── داشبۆردی کتێبخانە (z playlist) ───
+
+class CreateModal(discord.ui.Modal, title="🎼 لیستی نوێ"):
+    name = discord.ui.TextInput(label="ناوی لیست", placeholder="بۆ نموونە: Chill", max_length=MAX_PLAYLIST_NAME)
+
+    def __init__(self, cog, owner):
+        super().__init__()
+        self.cog = cog
+        self.owner = owner
+
+    async def on_submit(self, interaction):
+        res = lib_create(self.owner.id, str(self.name))
+        if res != "ok":
+            return await interaction.response.send_message(f"❌ {CREATE_ERRORS[res]}", ephemeral=True)
+        dash = DashboardView(self.cog, self.owner)
+        dash.message = interaction.message
+        await interaction.response.edit_message(embed=dash.build(), view=dash)
+
+class LibrarySelect(discord.ui.Select):
+    def __init__(self, owner):
+        self.owner = owner
+        options = [
+            discord.SelectOption(label="Favorites", value="fav", emoji="❤️",
+                                 description=f"{lib_count(lib_fav_id(owner.id))} گۆرانی"),
+            discord.SelectOption(label="Recently Played", value="recent", emoji="🕘",
+                                 description=f"{lib_recent_count(owner.id)} گۆرانی"),
+        ]
+        for pid, name, cnt in lib_custom(owner.id):
+            options.append(discord.SelectOption(label=name[:100], value=f"pl:{pid}", emoji="🎼",
+                                                description=f"{cnt} گۆرانی"))
+        super().__init__(placeholder="📂 لیستێک هەڵبژێرە...", options=options, row=0)
+
+    async def callback(self, interaction):
+        value = self.values[0]
+        uid = self.owner.id
+        if value == "fav":
+            ref = LibRef("fav", lib_fav_id(uid), FAV_TITLE, uid)
+        elif value == "recent":
+            ref = LibRef("recent", 0, "Recently Played", uid)
+        else:
+            pid = int(value.split(":")[1])
+            row = next((p for p in lib_custom(uid) if p[0] == pid), None)
+            if row is None:
+                return await interaction.response.send_message("❌ ئەم لیستە ئیتر نییە.", ephemeral=True)
+            ref = LibRef("playlist", pid, row[1], uid)
+        view = ListView(self.view.cog, self.owner, ref, dashboard=True)
+        view.message = interaction.message
+        await interaction.response.edit_message(embed=view.build(), view=view)
+
+class DashboardView(discord.ui.View):
+    def __init__(self, cog, owner):
+        super().__init__(timeout=180)
+        self.cog = cog
+        self.owner = owner
+        self.message = None
+        self.add_item(LibrarySelect(owner))
+
+    async def interaction_check(self, interaction):
+        if interaction.user.id != self.owner.id:
+            await interaction.response.send_message(
+                f"❌ ئەم کتێبخانەیە هی **{self.owner.display_name}**ـە. بۆ خۆت بنووسە `{PREFIX} playlist`.", ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+        if self.message:
+            try:
+                await self.message.edit(view=self)
+            except discord.HTTPException:
+                pass
+
+    def build(self):
+        uid = self.owner.id
+        pls = lib_custom(uid)
+        desc = (
+            f"❤️ **Favorites** ─ `{lib_count(lib_fav_id(uid))}` گۆرانی\n"
+            f"🕘 **Recently Played** ─ `{lib_recent_count(uid)}` گۆرانی\n\n"
+            f"{'─' * 18}\n"
+        )
+        if pls:
+            desc += "\n".join(
+                f"`{n}` 🎼 **{discord.utils.escape_markdown(name)}** ─ `{cnt}` گۆرانی"
+                for n, (pid, name, cnt) in enumerate(pls, start=1)
+            )
+        else:
+            desc += "*هێشتا هیچ لیستێکت نییە. دوگمەی ➕ دابگرە.*"
+        desc += f"\n\n💡 `{PREFIX} like` ┃ `{PREFIX} pl play <ناو>` ┃ `{PREFIX} recent`"
+        embed = make_embed("🎧 کتێبخانەی میوزیکی تۆ", desc, color=PURPLE)
+        embed.set_author(name=self.owner.display_name, icon_url=self.owner.display_avatar.url)
+        embed.set_thumbnail(url=self.owner.display_avatar.url)
+        embed.set_footer(text=f"{len(pls)}/{MAX_PLAYLISTS} لیست • {BOT_NAME} Music")
+        return embed
+
+    @discord.ui.button(emoji="➕", label="لیستی نوێ", style=discord.ButtonStyle.primary, row=1)
+    async def create_btn(self, interaction, button):
+        await interaction.response.send_modal(CreateModal(self.cog, self.owner))
 
 # ═══════════════════════════════════════
 # بەشی ٦: Cog ی سەرەکی
@@ -657,6 +1122,62 @@ class Music(commands.Cog):
         st.seek_to = int(min(max(position, 0), max(st.current.duration - 2, 0)))
         vc.stop()
         return True
+
+    # ─── گۆرانی پاشەکەوتکراو (لیست / Favorites / Recent) ───
+
+    async def ensure_voice(self, interaction):
+        voice = getattr(interaction.user, "voice", None)
+        if not voice or not voice.channel:
+            await interaction.response.send_message("❌ سەرەتا بچۆ ناو ڤۆیسێک.", ephemeral=True)
+            return False
+        return True
+
+    # rows = (title, url, duration, uploader, thumbnail). گۆرانییەکان دەخاتە ڕیزبەندی و ئەگەر هیچ نەلێدرا، دەست پێ دەکات
+    async def enqueue_saved(self, guild, channel, member, rows, shuffle=False, label=None):
+        rows = list(rows)
+        if not rows:
+            return await channel.send(embed=warn_embed("ئەم لیستە بەتاڵە."))
+        voice = member.voice.channel if member.voice else None
+        if voice is None:
+            return await channel.send(embed=error_embed(f"**{member.display_name}**، سەرەتا بچۆ ناو ڤۆیسێک."))
+        vc = guild.voice_client
+        if vc and vc.channel != voice:
+            return await channel.send(embed=error_embed(f"بوت لە {vc.channel.mention} دایە. بچۆ ئەوێ یان `{PREFIX} stop` بنووسە."))
+
+        st = self.state(guild.id)
+        room = MAX_QUEUE - len(st.queue) + (1 if st.current is None else 0)
+        if room <= 0:
+            return await channel.send(embed=warn_embed(f"ڕیزبەندی پڕە (**{MAX_QUEUE}** گۆرانی)."))
+        if shuffle:
+            random.shuffle(rows)
+        cut = len(rows) > room
+        tracks = [row_to_track(r, member) for r in rows[:room]]
+
+        if guild.voice_client is None:
+            try:
+                await voice.connect(reconnect=True, self_deaf=True)
+            except Exception as e:
+                return await channel.send(embed=error_embed(f"نەتوانرا بچمە ناو ڤۆیس.\n`{trim(e, 150)}`"))
+
+        self._cancel(st.idle_task)
+        st.channel = channel
+        async with st.lock:
+            idle = st.current is None
+            if idle:
+                st.current = tracks[0]
+                st.queue.extend(tracks[1:])
+            else:
+                st.queue.extend(tracks)
+
+        text = f"**{discord.utils.escape_markdown(label or 'لیست')}** ─ `{len(tracks)}` گۆرانی"
+        if cut:
+            text += f"\n⚠️ تەنها {len(tracks)} گۆرانی جێی بووەوە (سنووری ڕیزبەندی)."
+        embed = ok_embed("🔀 تێکەڵ کرا و زیاد کرا" if shuffle else "➕ زیاد کرا بۆ ڕیزبەندی", text)
+        embed.set_footer(text=f"داواکراوە لەلایەن {member.display_name} • {BOT_NAME} Music",
+                         icon_url=member.display_avatar.url)
+        await channel.send(embed=embed)
+        if idle:
+            await self.start_track(guild, tracks[0])
 
     # ─── کارتی "ئێستا لێدەدرێت" ───
 
@@ -844,6 +1365,8 @@ class Music(commands.Cog):
             source = make_stream_source(data, start_at, st.volume) if data else AudioSource(path, st.volume, start_at)
             vc.play(source, after=after)
             tune_encoder(vc)
+            if not start_at:
+                record_recent(track.requester.id, track)
         except Exception as e:
             st.current = None
             self.remove_file(track)
@@ -1242,6 +1765,104 @@ class Music(commands.Cog):
                 f"`{PREFIX} seek 1:30` ‧ `{PREFIX} seek 90` ‧ `{PREFIX} seek +30` ‧ `{PREFIX} seek -15`", ctx=ctx), delete_after=12)
         if self.do_seek(ctx.guild, target):
             await ctx.message.add_reaction("⏩")
+
+    # ═══ کتێبخانە: z playlist / z like / z recent ═══
+
+    # z playlist ─ داشبۆردی کتێبخانە
+    @commands.group(name="playlist", aliases=["pl", "playlists", "library", "lib"], invoke_without_command=True)
+    async def playlist(self, ctx):
+        view = DashboardView(self, ctx.author)
+        view.message = await ctx.send(embed=view.build(), view=view)
+
+    # z pl create <ناو>
+    @playlist.command(name="create", aliases=["new"])
+    async def pl_create(self, ctx, *, name: str):
+        res = lib_create(ctx.author.id, name)
+        if res != "ok":
+            return await ctx.send(embed=error_embed(CREATE_ERRORS[res], ctx=ctx), delete_after=10)
+        await ctx.send(embed=ok_embed("🎼 لیستەکە دروست بوو", f"**{discord.utils.escape_markdown(' '.join(name.split())[:MAX_PLAYLIST_NAME])}**\n"
+                                       f"گۆرانییەک لێبدە و 💾 دابگرە، یان `{PREFIX} pl add <ناو>` بنووسە.", ctx=ctx))
+
+    # z pl delete <ناو/ژمارە>
+    @playlist.command(name="delete", aliases=["del"])
+    async def pl_delete(self, ctx, *, ref: str):
+        r = lib_resolve(ctx.author.id, ref)
+        if r is None or r.kind != "playlist":
+            return await ctx.send(embed=error_embed("ئەو لیستە نەدۆزرایەوە (Favorites/Recent ناسڕێنەوە)."), delete_after=10)
+        lib_delete(r.id)
+        await ctx.send(embed=ok_embed("🗑️ لیستەکە سڕایەوە", f"**{discord.utils.escape_markdown(r.name)}**", ctx=ctx))
+
+    # z pl add <ناو/ژمارە/fav> ─ گۆرانی ئێستا دەخاتە ناو لیست
+    @playlist.command(name="add")
+    async def pl_add(self, ctx, *, ref: str):
+        st = self.states.get(ctx.guild.id)
+        if not st or not st.current:
+            return await ctx.send(embed=error_embed("هیچ گۆرانییەک نالێدرێت بۆ زیادکردن."), delete_after=8)
+        r = lib_resolve(ctx.author.id, ref)
+        if r is None or r.kind == "recent":
+            return await ctx.send(embed=error_embed(f"ئەو لیستە نەدۆزرایەوە. `{PREFIX} playlist` ببینە."), delete_after=10)
+        res = lib_add(r.id, st.current)
+        await ctx.send(embed=ok_embed(r.title, f"{ADD_TEXT[res]}\n[{trim(st.current.title, 80)}]({st.current.url})", ctx=ctx))
+
+    # z pl remove <ناو/ژمارەی لیست> <ژمارەی گۆرانی>
+    @playlist.command(name="remove", aliases=["rm"])
+    async def pl_remove(self, ctx, *, args: str):
+        parts = args.rsplit(None, 1)
+        if len(parts) != 2 or not parts[1].isdigit():
+            return await ctx.send(embed=error_embed(f"`{PREFIX} pl remove <ناوی لیست> <ژمارەی گۆرانی>`"), delete_after=10)
+        r = lib_resolve(ctx.author.id, parts[0])
+        if r is None or r.kind == "recent":
+            return await ctx.send(embed=error_embed("ئەو لیستە نەدۆزرایەوە."), delete_after=10)
+        title = lib_remove_track(r.id, int(parts[1]))
+        if title is None:
+            return await ctx.send(embed=error_embed("ئەو ژمارەیە لە لیستەکەدا نییە."), delete_after=10)
+        await ctx.send(embed=ok_embed("🗑️ لابرا", f"**{trim(title, 80)}** لە {r.title}", ctx=ctx))
+
+    # z pl play <ناو/ژمارە> / z pl shuffle <ناو/ژمارە>
+    async def _pl_play(self, ctx, ref, shuffle):
+        r = lib_resolve(ctx.author.id, ref)
+        if r is None:
+            return await ctx.send(embed=error_embed(f"ئەو لیستە نەدۆزرایەوە. `{PREFIX} playlist` ببینە."), delete_after=10)
+        await self.enqueue_saved(ctx.guild, ctx.channel, ctx.author, lib_tracks(r), shuffle=shuffle, label=r.title)
+
+    @playlist.command(name="play", aliases=["p"])
+    async def pl_play(self, ctx, *, ref: str):
+        await self._pl_play(ctx, ref, False)
+
+    @playlist.command(name="shuffle", aliases=["mix"])
+    async def pl_shuffle(self, ctx, *, ref: str):
+        await self._pl_play(ctx, ref, True)
+
+    # z pl view <ناو/ژمارە>
+    @playlist.command(name="view", aliases=["open", "show"])
+    async def pl_view(self, ctx, *, ref: str):
+        r = lib_resolve(ctx.author.id, ref)
+        if r is None:
+            return await ctx.send(embed=error_embed(f"ئەو لیستە نەدۆزرایەوە. `{PREFIX} playlist` ببینە."), delete_after=10)
+        view = ListView(self, ctx.author, r)
+        view.message = await ctx.send(embed=view.build(), view=view)
+
+    # z like ─ گۆرانی ئێستا دەخاتە / لادەبات لە ❤️ Favorites
+    @commands.command(name="like", aliases=["love"])
+    async def like(self, ctx):
+        st = self.states.get(ctx.guild.id)
+        if not st or not st.current:
+            return await ctx.send(embed=error_embed("هیچ گۆرانییەک نالێدرێت."), delete_after=8)
+        res = lib_toggle_fav(ctx.author.id, st.current)
+        title = {"added": "❤️ زیاد کرا بۆ Favorites", "removed": "💔 لە Favorites لابرا", "full": "❌ Favorites پڕە"}[res]
+        await ctx.send(embed=ok_embed(title, f"[{trim(st.current.title, 80)}]({st.current.url})", ctx=ctx))
+
+    # z likes ─ لیستی Favorites
+    @commands.command(name="likes", aliases=["favs", "favorites"])
+    async def likes(self, ctx):
+        view = ListView(self, ctx.author, LibRef("fav", lib_fav_id(ctx.author.id), FAV_TITLE, ctx.author.id))
+        view.message = await ctx.send(embed=view.build(), view=view)
+
+    # z recent ─ Recently Played
+    @commands.command(name="recent", aliases=["recently"])
+    async def recent(self, ctx):
+        view = ListView(self, ctx.author, LibRef("recent", 0, "Recently Played", ctx.author.id))
+        view.message = await ctx.send(embed=view.build(), view=view)
 
     # z menu
     @commands.command(name="menu", aliases=["songs", "artists", "playlist"])
