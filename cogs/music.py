@@ -2,6 +2,7 @@ import asyncio
 import math
 import os
 import random
+import shlex
 import time
 from dataclasses import dataclass
 from typing import Optional
@@ -28,7 +29,9 @@ DEFAULT_VOLUME = 0.8          # دەنگی سەرەتا (٨٠٪)
 MAX_VOLUME = 1.5              # بەرزترین دەنگ (١٥٠٪)
 VOLUME_STEP = 0.1             # هەر کلیکێکی 🔉 / 🔊 چەند دەگۆڕێت (١٠٪)
 MAX_QUEUE = 50                # زۆرترین گۆرانی لە ڕیزبەندیدا
-MAX_SONG_MINUTES = 60         # درێژترین گۆرانی (بە خولەک). گۆرانی درێژتر ڕەت دەکرێتەوە
+MAX_SONG_MINUTES = 720        # درێژترین گۆرانی (بە خولەک). ٧٢٠ = ١٢ کاتژمێر. 0 = بێ سنوور
+STREAM_OVER_MINUTES = 30      # گۆرانی لەمە درێژتر دانابەزێت و ڕاستەوخۆ stream دەکرێت (باشترە بۆ ڤیدیۆی ١٠ کاتژمێری). 0 = هەمووی دابەزێنە
+MAX_STREAM_RETRIES = 8        # ئەگەر stream پچڕا، چەند جار دووبارە لەو شوێنەوە بەردەوام بێت
 IDLE_DISCONNECT = 120         # ئەگەر هیچ نەلێدرا، دوای چەند چرکە بچێتە دەرەوە
 ALONE_DISCONNECT = 60         # ئەگەر بوت تەنها مایەوە لە ڤۆیس، دوای چەند چرکە بچێتە دەرەوە
 PROGRESS_REFRESH = 8          # نوێکردنەوەی شریتی کات (چرکە). لە ٥ کەمتر مەیکە، Discord سنووری هەیە
@@ -175,6 +178,7 @@ class Track:
     requester: discord.Member
     is_live: bool = False
     filepath: Optional[str] = None
+    retries: int = 0
 
     @property
     def duration_str(self):
@@ -212,6 +216,18 @@ class AudioSource(discord.PCMVolumeTransformer):
     def __init__(self, filepath, volume):
         super().__init__(discord.FFmpegPCMAudio(filepath, **FFMPEG_OPTIONS), volume)
         self.filepath = filepath
+
+# stream ی ڕاستەوخۆ (بێ دابەزاندن). start_at = لە چەند چرکەوە دەست پێ بکات
+def make_stream_source(data, start_at, volume):
+    headers = data.get("http_headers") or {}
+    hdr = "".join(f"{k}: {v}\r\n" for k, v in headers.items())
+    before = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+    if start_at > 0:
+        before += f" -ss {int(start_at)}"
+    if hdr:
+        before += f" -headers {shlex.quote(hdr)}"
+    source = discord.FFmpegPCMAudio(data["url"], before_options=before, options="-vn")
+    return discord.PCMVolumeTransformer(source, volume)
 
 # دۆخی میوزیکی هەر سێرڤەرێک
 class GuildState:
@@ -603,7 +619,7 @@ class Music(commands.Cog):
         track = make_track(data, member)
         if track.is_live:
             return await status.edit(embed=warn_embed("لایڤ (Live) پشتگیری ناکرێت."))
-        if track.duration > MAX_SONG_MINUTES * 60:
+        if MAX_SONG_MINUTES and track.duration > MAX_SONG_MINUTES * 60:
             return await status.edit(embed=warn_embed(f"گۆرانییەکە زۆر درێژە. زۆرترین ماوە **{MAX_SONG_MINUTES} خولەک**ـە."))
 
         if guild.voice_client is None:
@@ -652,15 +668,23 @@ class Music(commands.Cog):
         track.filepath = path
         return path
 
-    # st.current پێشتر دانراوە. ئەم فەرمانە دایدەبەزێنێت و دەستی پێ دەکات
-    async def start_track(self, guild, track, reuse=False):
+    def is_stream(self, track):
+        return STREAM_OVER_MINUTES > 0 and track.duration > STREAM_OVER_MINUTES * 60
+
+    # st.current پێشتر دانراوە. ئەم فەرمانە دایدەبەزێنێت (یان stream دەکات) و دەستی پێ دەکات
+    async def start_track(self, guild, track, reuse=False, start_at=0):
         st = self.state(guild.id)
+        path, data = None, None
         try:
-            path = await self.download(track, guild.id)
+            if self.is_stream(track):
+                # هەر جارێک لینکی نوێ وەردەگرین، چونکە لینکی YouTube دوای چەند کاتژمێرێک بەسەر دەچێت
+                data, _ = await self.bot.loop.run_in_executor(None, _extract, track.url, False)
+            else:
+                path = await self.download(track, guild.id)
         except Exception as e:
             st.current = None
             if st.channel:
-                await st.channel.send(embed=error_embed(f"نەتوانرا **{trim(track.title, 60)}** دابەزێنرێت.\n`{trim(e, 150)}`"))
+                await st.channel.send(embed=error_embed(f"نەتوانرا **{trim(track.title, 60)}** بارکرێت.\n`{trim(e, 150)}`"))
             return await self.play_next(guild)
 
         vc = guild.voice_client
@@ -674,7 +698,8 @@ class Music(commands.Cog):
             asyncio.run_coroutine_threadsafe(self._after(guild, track), self.bot.loop)
 
         try:
-            vc.play(AudioSource(path, st.volume), after=after)
+            source = make_stream_source(data, start_at, st.volume) if data else AudioSource(path, st.volume)
+            vc.play(source, after=after)
         except Exception as e:
             st.current = None
             self.remove_file(track)
@@ -683,9 +708,10 @@ class Music(commands.Cog):
             return
 
         st.reset_clock()
+        st.started_at -= start_at
         view = MusicControls(self, guild.id)
         embed = self.now_embed(guild, st)
-        if reuse and st.message:
+        if (reuse or start_at) and st.message:
             try:
                 await st.message.edit(embed=embed, view=st.view or view)
                 view = st.view or view
@@ -700,11 +726,21 @@ class Music(commands.Cog):
 
     async def _after(self, guild, track):
         st = self.states.get(guild.id)
-        keep = bool(st and st.loop == "song" and not st.skipped and st.current is track)
+        if st is None or st.current is not track:
+            self.remove_file(track)
+            return
+        # ئەگەر stream لە ناوەڕاستدا پچڕا، لەو شوێنەوە بەردەوام دەبێت
+        if self.is_stream(track) and not st.skipped:
+            elapsed = st.elapsed()
+            if track.duration - elapsed > 20:
+                if track.retries < MAX_STREAM_RETRIES:
+                    track.retries += 1
+                    return await self.start_track(guild, track, reuse=True, start_at=elapsed)
+                if st.channel:
+                    await st.channel.send(embed=warn_embed(f"stream ی **{trim(track.title, 60)}** پچڕا و نەگەڕایەوە."))
+        keep = bool(st.loop == "song" and not st.skipped)
         if not keep:
             self.remove_file(track)
-        if st is None or st.current is not track:
-            return
         await self.play_next(guild)
 
     async def play_next(self, guild):
@@ -734,6 +770,7 @@ class Music(commands.Cog):
             self._cancel(st.idle_task)
             st.idle_task = self.bot.loop.create_task(self._idle(guild))
             return
+        nxt.retries = 0
         await self.start_track(guild, nxt, reuse=reuse)
 
     # شریتی کات نوێ دەکاتەوە
