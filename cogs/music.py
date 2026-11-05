@@ -430,7 +430,7 @@ class MusicControls(discord.ui.View):
         self.cog.set_volume(interaction.guild.voice_client, st, st.volume - VOLUME_STEP)
         await self._update(interaction)
 
-    @discord.ui.button(emoji="⏹️", style=discord.ButtonStyle.danger, row=1)
+    @discord.ui.button(emoji="https://cdn.discordapp.com/attachments/1567978061914181733/1567978181300985986/dU5an1eJ0V.gif?ex=6aee24fa&is=6aecd37a&hm=1335f504e2406bd21ab86e8606efcd5b3573fc191745b559b7b7714f35d05cbf&", style=discord.ButtonStyle.danger, row=1)
     async def stop_btn(self, interaction, button):
         await interaction.response.defer()
         guild = interaction.guild
