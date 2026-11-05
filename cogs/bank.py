@@ -22,7 +22,7 @@ from database import db, get_user, parse_bet
 from utils import PREFIX, CURRENCY
 
 # ═══════════════════════════════════════
-# ڕێکخستن (لێرە دەستکاری بکە)
+# ڕێکخستن (ل ڤێرە دەستکاری بکە)
 # ═══════════════════════════════════════
 INTEREST_RATE = 0.10              # ٪١٠ قازانج
 INTEREST_INTERVAL = 24 * 60 * 60  # هەر ٢٤ دەمژمێران جارەکێ (ب چرکە)
@@ -279,7 +279,7 @@ def card_embed(member, show_wallet=True):
             f"> بۆ ئاستێ {nxt[2]} **{nxt[1]}** پێدڤی ب `{_fmt(nxt[0] - bal)}` یێن دی یە"
         )
     else:
-        prog = f"{_bar(1)} `MAX`\n> تە گەهشتیە بلندترین ئاستی 👑"
+        prog = f"{_bar(1)} `MAX`\n> تە گەهشتیە بلندترین ئاستێ 👑"
 
     desc = f"### {t_emoji}  ئاستێ {t_name}\n{prog}"
     if acct["gained"] > 0:
@@ -385,7 +385,7 @@ class ConfirmView(discord.ui.View):
         if self.message:
             try:
                 await self.message.edit(
-                    embed=discord.Embed(title="⌛ کات ب سەر چوو", description="مامەلە هاتە هەڵوەشاندن.", color=RED),
+                    embed=discord.Embed(title="⌛ دەم ب سەر چوو", description="مامەلە هاتە هەڵوەشاندن.", color=RED),
                     view=None,
                 )
             except discord.HTTPException:

@@ -8,7 +8,7 @@ from utils import (
     E_EGGPLANT, E_GRAPE, E_ORANGE, E_CHERRY, E_DIAMOND,
 )
 
-# نرخ و cooldown ی ڕاوکردن لە hunt_data.py وەردەگیرێت (ئەگەر نەبوو: ١٠ و ١٥)
+# نرخ و cooldownا ڕاوکرنێ ژ hunt_data.py دهێتە وەرگرتن (ئەگەر نەبیت: ١٠ و ١٥)
 try:
     from . import hunt_data as _HD
     HUNT_COST, HUNT_COOLDOWN = _HD.HUNT_COST, _HD.HUNT_COOLDOWN
@@ -16,21 +16,21 @@ except Exception:
     HUNT_COST, HUNT_COOLDOWN = 10, 15
 
 # ═══════════════════════════════════════
-# بەشی ١: ڕێکخستنەکان (لێرە دەستکاری بکە)
+# بەشێ ١: ڕێکخستن (ل ڤێرە دەستکاری بکە)
 # ═══════════════════════════════════════
 
-# GIF ی هەموو لاپەڕەکان. ئەگەر نەتەوێت: None
-# ئاگادار بە: لینکەکانی cdn.discordapp.com کاتیان هەیە (ex=...) و دوای ماوەیەک ناکار دەکەن.
-# چارەسەری هەمیشەیی: GIF لە GitHub باربکە و لینکی raw ی بەکاربهێنە، بۆ نموونە:
+# GIFا هەمی لاپەڕان. ئەگەر نەڤێت: None
+# ئاگەهدار بە: لینکێن cdn.discordapp.com دەم هەنە (ex=...) و پشتی ماوەیەکێ ناکار دبن.
+# چارەسەریا هەمیشەیی: GIF ل GitHub بار بکە و لینکێ raw بکار بینە، بۆ نموونە:
 # "https://raw.githubusercontent.com/Mhamadd11227H/My-bot-new/main/zero.gif"
 GIF_URL = (
     "https://cdn.discordapp.com/attachments/1535963966130622515/1537670836050202696/"
     "zero_bot_neon_animated.gif?ex=6a81dd4f&is=6a808bcf&hm=f240b7bcd96096c6456901a297d5a99926ef47a7c37595cc65a9f9f0bcb0b960&"
 )
 
-# وێنەی هەموو لاپەڕەکان. ڕیزبەندی:
-# ١. ئەو وێنەیەی بە فەرمانی  z media set help <ناو>  دیاریت کردووە (باشترین ڕێگا)
-# ٢. فایلی zero.gif ئەگەر لەتەنیشت bot.py یان لەناو cogs دانرابوو
+# وێنەیێ هەمی لاپەڕان. ڕیزبەندی:
+# ١. ئەو وێنەیێ ب فەرمانا  z media set help <ناڤ>  دیاری کری (باشترین ڕێک)
+# ٢. فایلا zero.gif ئەگەر ل تەنیشت bot.py یان د ناڤ cogs دا هاتبیتە دانان
 # ٣. GIF_URL ی سەرەوە
 try:
     from media_store import slot_file
@@ -46,7 +46,7 @@ def _find_gif():
     return None
 
 def current_media():
-    """(path, filename) ی وێنەی ئێستا، یان (None, None)"""
+    """(path, filename) یێ وێنەیێ نوکە، یان (None, None)"""
     found = slot_file("help")
     if found:
         return found
@@ -57,23 +57,23 @@ def gif_source():
     path, filename = current_media()
     return f"attachment://{filename}" if path else GIF_URL
 
-# دوگمەی سێرڤەری ساپۆرت (ئەگەر نەتەوێت: None)
+# دوگمەیا سێرڤەرێ ساپۆرتێ (ئەگەر نەڤێت: None)
 SUPPORT_URL = "https://discord.gg/GK6WZbxuUK"
 
-# دوگمەی زیادکردنی بوت. ئایدی بوت خۆکارە، بۆیە هەمیشە بوتی ئێستا زیاد دەکات
-# ڕێگەپێدانەکان: 8 = Administrator. بۆ ڕێگەی کەمتر ژمارەیەکی تر دابنێ
+# دوگمەیا زێدەکرنا بوتی. ئایدیا بوتی خۆکارە، ژ بەر هندێ هەمیشە بوتێ نوکە زێدە دکەت
+# ڕێپێدان: 8 = Administrator. بۆ ڕێپێدانا کێمتر ژمارەکا دی دانە
 INVITE_PERMISSIONS = 8
 
 DIVIDER = "─" * 18
 
-# ناڤ و وەسفێ کورت بۆ لاپەڕەی سەرەکی (ب هێڵەک). بەشێ نوی؟ لێرە ژی زێدە بکە
+# ناڤ و وەسفێ کورت بۆ لاپەڕا سەرەکی (ب هێلەک). بەشێ نوی؟ ل ڤێرە ژی زێدە بکە
 HOME_INFO = {
     "general": ("گشتی", "فەرمانێن سادە"),
     "info":    ("زانیاری", "ئەندام و سێرڤەر"),
     "economy": ("ئابووری و بانک", "دراڤ، daily و بانک"),
-    "hunt":    ("ڕاوکردن", "ئاژەل و Huntbot"),
+    "hunt":    ("ڕاوکرن", "ئاژەل و Huntbot"),
     "games":   ("یاری", "یاریێن ب دراڤ"),
-    "music":   ("میوزیک", "گۆرانی، ڕیزبەندی و کۆنتڕۆڵ"),
+    "music":   ("میوزیک", "گۆرانی، ڕیزا گۆرانیان و کۆنتڕۆل"),
     "setup":   ("ڕێکخستن", "Welcome و Invite و Left"),
     "mod":     ("مۆدەراسیۆن", "تەنێ بۆ بەرپرسان"),
 }
@@ -85,9 +85,9 @@ def home_short(key):
     return HOME_INFO.get(key, ("", CATEGORIES[key]["desc"]))[1]
 
 # ═══════════════════════════════════════
-# بەشی ٢: لیستی بەشەکان و فەرمانەکان
-# تەنها ئەو فەرمانانەی لە بوتەکەدا هەن. فەرمانی نوێ؟ لێرە زیادی بکە
-# {p} = هێمای فەرمان (z)
+# بەشێ ٢: لیستا بەشان و فەرمانان
+# تەنێ ئەو فەرمانێن د بوتی دا هەین. فەرمانەکا نوی؟ ل ڤێرە زێدە بکە
+# {p} = هێمایا فەرمانێ (z)
 # ═══════════════════════════════════════
 CATEGORIES = {
     "general": {
@@ -132,24 +132,24 @@ CATEGORIES = {
     },
     "hunt": {
         "emoji": "🐾",
-        "title": "ڕاوکردن (Zero Hunt)",
-        "desc": "ئاژەڵ ڕاو بکە، کۆیان بکەرەوە، بیانفرۆشە و Huntbot ی خۆت زیاد بکە",
+        "title": "ڕاوکرن (Zero Hunt)",
+        "desc": "ئاژەل ڕاو بکە، کۆم بکە، بفرۆشە و Huntbota خوە بهێز بکە",
         "color": 0x9B59B6,
         "commands": [
-            ("{p} hunt", "ئاژەڵێک ڕاو بکە (`{p} h` / `{p} catch`). نرخ: ١٠ دراو، ١٥ چرکە cooldown"),
-            ("{p} zoo", "باخچەی ئاژەڵەکانت (`{p} zoo rare` / `{p} zoo display` / `{p} zoo search <ناو>`)"),
-            ("{p} sell <ئاژەڵ/rarity/all>", "ئاژەڵ بفرۆشە (`{p} sell wolf 3` / `{p} sell common` / `{p} sell all`)"),
-            ("{p} sacrifice <ئاژەڵ/rarity/all>", "ئاژەڵ بکە essence (`{p} essence` بۆ بینینی بڕەکەی)"),
-            ("{p} lock <ئاژەڵ>", "ئاژەڵێک بپارێزە لە فرۆشتن (`{p} unlock` بۆ لابردنی)"),
-            ("{p} team", "تیمی پێت. XP وەردەگرن (`{p} team add wolf` / `{p} team remove wolf` / `{p} rename wolf ناو`)"),
-            ("{p} gems", "gem ەکانت (`{p} use <id>` چالاکی دەکات، `{p} geminfo <id>`)"),
-            ("{p} lootbox", "lootbox ەکانت (`{p} lootbox open` / `{p} lootbox history`)"),
-            ("{p} inventory", "هەموو شتەکانت و buff ە چالاکەکان (`{p} bag` / `{p} buffs`)"),
-            ("{p} huntbot", "بۆتی ڕاوکردنی ئۆفلاین (`{p} hb start` / `{p} hb upgrade <stat>` / `{p} hb claim`)"),
-            ("{p} owodex <ئاژەڵ>", "ئینسایکلۆپیدیای ئاژەڵەکان"),
-            ("{p} huntstats", "ئاماری ڕاوکردنت (`{p} hs`)"),
-            ("{p} huntlb", "لیستی پێشەنگی ڕاوکردن (`{p} hlb`)"),
-            ("{p} events", "event ە چالاکەکان (Halloween، Christmas، ...)"),
+            ("{p} hunt", "ئاژەلەکێ ڕاو بکە (`{p} h` / `{p} catch`). نرخ: ١٠ دراو، ١٥ چرکە cooldown"),
+            ("{p} zoo", "باخچەیا ئاژەلێن تە (`{p} zoo rare` / `{p} zoo display` / `{p} zoo search <ناڤ>`)"),
+            ("{p} sell <ئاژەل/rarity/all>", "ئاژەلان بفرۆشە (`{p} sell wolf 3` / `{p} sell common` / `{p} sell all`)"),
+            ("{p} sacrifice <ئاژەل/rarity/all>", "ئاژەلان بکە essence (`{p} essence` بۆ دیتنا بڕێ وێ)"),
+            ("{p} lock <ئاژەل>", "ئاژەلەکێ ژ فرۆتنێ بپارێزە (`{p} unlock` بۆ لابرنێ)"),
+            ("{p} team", "تیما تە. XP وەردگرن (`{p} team add wolf` / `{p} team remove wolf` / `{p} rename wolf ناڤ`)"),
+            ("{p} gems", "gemێن تە (`{p} use <id>` چالاک دکەت، `{p} geminfo <id>`)"),
+            ("{p} lootbox", "lootboxێن تە (`{p} lootbox open` / `{p} lootbox history`)"),
+            ("{p} inventory", "هەمی تشتێن تە و buffێن چالاک (`{p} bag` / `{p} buffs`)"),
+            ("{p} huntbot", "بوتێ ڕاوکرنێ یێ ئۆفلاین (`{p} hb start` / `{p} hb upgrade <stat>` / `{p} hb claim`)"),
+            ("{p} owodex <ئاژەل>", "ئینسایکلۆپیدیایا ئاژەلان"),
+            ("{p} huntstats", "ئاماریێن ڕاوکرنا تە (`{p} hs`)"),
+            ("{p} huntlb", "لیستا پێشەنگێن ڕاوکرنێ (`{p} hlb`)"),
+            ("{p} events", "eventێن چالاک (Halloween، Christmas، ...)"),
         ],
     },
     "games": {
@@ -170,32 +170,32 @@ CATEGORIES = {
     "music": {
         "emoji": "🎶",
         "title": "میوزیک (Zero Music)",
-        "desc": "گۆرانی لە YouTube و TikTok لێبدە لە ڤۆیس، ب دوگمە و ڕیزبەندی",
+        "desc": "گۆرانیان ژ YouTube و TikTok ل ڤۆیسێ لێدە، ب دوگمە و ڕیزا گۆرانیان",
         "color": 0x7B2FF7,
         "commands": [
-            ("{p} play <ناو/لینک>", "گۆرانییەک لێدەدات یان دەیخاتە ڕیزبەندی (`{p} p`). چەند دێڕ = چەند گۆرانی"),
-            ("{p} menu", "داشبۆردی هونەرمەندان: هونەرمەندێک و گۆرانییەک هەڵبژێرە (`{p} songs` / `{p} artists`)"),
-            ("{p} join", "بوت دەهێنیتە ناو ڤۆیسەکەت (`{p} j`)"),
-            ("{p} pause / {p} resume", "گۆرانی دەوەستێنێت / بەردەوامی دەکات"),
-            ("{p} skip", "گۆرانی دەپەڕێنێت (`{p} sk` / `{p} next`)"),
-            ("{p} stop", "میوزیک ڕادەگرێت و بوت دەچێتە دەرەوە (`{p} leave` / `{p} dc`)"),
-            ("{p} previous", "گۆرانی پێشوو، یان دووبارە لە سەرەتاوە ئەگەر زیاتر لە ٥ چرکە لێدرابێت (`{p} prev` / `{p} back`)"),
-            ("{p} jump <ژمارە>", "ڕاستەوخۆ بچۆ سەر گۆرانییەک لە ڕیزبەندی (`{p} skipto 3`)"),
-            ("{p} seek <کات>", "بپەڕێ بۆ چرکەیەک: `{p} seek 1:30` / `{p} seek +30` / `{p} seek -15`"),
-            ("{p} playlist", "کتێبخانەی خۆت: Favorites و Recently Played و لیستەکانت، ب دوگمە (`{p} pl`)"),
-            ("{p} pl create <ناو>", "لیستێکی نوێ دروست دەکات (هەر کەسێک تا ١٠ لیست)"),
-            ("{p} pl add <ناو/ژمارە>", "گۆرانی ئێستا دەخاتە ناو لیست (یان دوگمەی 💾 لە پلەیەر)"),
-            ("{p} pl play <ناو/ژمارە>", "هەموو لیستەکە لێدەدات (`{p} pl shuffle` بۆ تێکەڵ)"),
-            ("{p} pl remove <ناو> <ژمارە>", "گۆرانییەک لە لیست لادەبات. `{p} pl delete <ناو>` هەموو لیستەکە دەسڕێتەوە"),
-            ("{p} like", "گۆرانی ئێستا دەخاتە / لادەبات لە ❤️ Favorites (یان دوگمەی ❤️). `{p} likes` بۆ لیستەکە"),
-            ("{p} recent", "کۆتا گۆرانییەکانی تۆ (Recently Played)"),
-            ("{p} loop", "دووبارەکردنەوە: ناچالاک ← گۆرانی ← ڕیزبەندی (`{p} loop song` / `queue` / `off`)"),
-            ("{p} volume <1-150>", "دەنگ دەگۆڕێت (`{p} vol 50`). بێ ژمارە = دەنگی ئێستا"),
-            ("{p} queue", "ڕیزبەندی پەڕە بە پەڕە نیشان دەدات (`{p} q`)"),
-            ("{p} nowplaying", "گۆرانی ئێستا نیشان دەدات (`{p} np`)"),
-            ("{p} shuffle", "ڕیزبەندی تێکەڵ دەکات (`{p} mix`)"),
-            ("{p} removesong <ژمارە>", "گۆرانییەک لە ڕیزبەندی لادەبات (`{p} rs 3`)"),
-            ("{p} clearqueue", "هەموو ڕیزبەندی پاک دەکاتەوە (`{p} cq`)"),
+            ("{p} play <ناڤ/لینک>", "گۆرانیەکێ لێددەت یان دکەتە ڕیزێ (`{p} p`). چەند دێڕ = چەند گۆرانی"),
+            ("{p} menu", "داشبۆردا هونەرمەندان: هونەرمەندەک و گۆرانیەکێ هەلبژێرە (`{p} songs` / `{p} artists`)"),
+            ("{p} join", "بوتی دئینیتە ناڤ ڤۆیسا تە (`{p} j`)"),
+            ("{p} pause / {p} resume", "گۆرانیێ ڕادگریت / بەردەوام دکەت"),
+            ("{p} skip", "گۆرانیێ دپەڕینیت (`{p} sk` / `{p} next`)"),
+            ("{p} stop", "میوزیکێ ڕادگریت و بوت دچیتە دەر (`{p} leave` / `{p} dc`)"),
+            ("{p} previous", "گۆرانیا بەری نوکە، یان دوبارە ژ دەستپێکێ ئەگەر پتر ژ ٥ چرکەیان هاتبیتە لێدان (`{p} prev` / `{p} back`)"),
+            ("{p} jump <ژمارە>", "ڕاستەخۆ بچە سەر گۆرانیەکێ ل ڕیزێ (`{p} skipto 3`)"),
+            ("{p} seek <دەم>", "بپەڕە چرکەیەکێ: `{p} seek 1:30` / `{p} seek +30` / `{p} seek -15`"),
+            ("{p} playlist", "کتێبخانەیا تە: Favorites و Recently Played و لیستێن تە، ب دوگمە (`{p} pl`)"),
+            ("{p} pl create <ناڤ>", "لیستەکا نوی چێدکەت (هەر کەسەک هەتا ١٠ لیستان)"),
+            ("{p} pl add <ناڤ/ژمارە>", "گۆرانیا نوکە دکەتە ناڤ لیستێ (یان دوگمەیا 💾 ل پلەیەرێ)"),
+            ("{p} pl play <ناڤ/ژمارە>", "هەمی لیستێ لێددەت (`{p} pl shuffle` بۆ تێکەلکرنێ)"),
+            ("{p} pl remove <ناڤ> <ژمارە>", "گۆرانیەکێ ژ لیستێ لادبەت. `{p} pl delete <ناڤ>` هەمی لیستێ ژێدبەت"),
+            ("{p} like", "گۆرانیا نوکە دکەتە / لادبەت ژ ❤️ Favorites (یان دوگمەیا ❤️). `{p} likes` بۆ لیستێ"),
+            ("{p} recent", "دویماهیک گۆرانیێن تە (Recently Played)"),
+            ("{p} loop", "دوبارەکرنەڤە: ناچالاک ← گۆرانی ← ڕیز (`{p} loop song` / `queue` / `off`)"),
+            ("{p} volume <1-150>", "دەنگی دگۆڕیت (`{p} vol 50`). بێ ژمارە = دەنگێ نوکە"),
+            ("{p} queue", "ڕیزێ لاپەڕە ب لاپەڕە نیشان ددەت (`{p} q`)"),
+            ("{p} nowplaying", "گۆرانیا نوکە نیشان ددەت (`{p} np`)"),
+            ("{p} shuffle", "ڕیزێ تێکەل دکەت (`{p} mix`)"),
+            ("{p} removesong <ژمارە>", "گۆرانیەکێ ژ ڕیزێ لادبەت (`{p} rs 3`)"),
+            ("{p} clearqueue", "هەمی ڕیزێ پاقژ دکەت (`{p} cq`)"),
         ],
     },
     "setup": {
@@ -224,10 +224,10 @@ CATEGORIES = {
 }
 
 # ═══════════════════════════════════════
-# بەشی ٢.٥: لیستی یارییەکان (ئەو لیستەی دوای کلیککردن لە "یاری" دەردەکەوێت)
-# یاری نوێ؟ تەنها بلۆکێکی نوێ لێرە زیاد بکە، لیستەکە خۆکار نوێ دەبێتەوە
-# "sections" = لیستی (ناوی بەش، دەق). هەر دەقێک نابێت لە ١٠٠٠ پیت زیاتر بێت
-# {p} = هێمای فەرمان
+# بەشێ ٢.٥: لیستا یاریان (ئەو لیستا پشتی کلیککرنێ ل "یاری" دیار دبیت)
+# یاریەکا نوی؟ تەنێ بلۆکەکا نوی ل ڤێرە زێدە بکە، لیست ب خۆکار نوی دبیتەڤە
+# "sections" = لیستا (ناڤێ بەشی، دەق). هەر دەقەک نابیت ژ ١٠٠٠ پیتان پتر بیت
+# {p} = هێمایا فەرمانێ
 # ═══════════════════════════════════════
 _SLOT_TABLE = (
     f"{E_EGGPLANT * 3} ── **x1** (تەنێ شەرتێ خوە وەردگریڤە) ── ٪٢٠\n"
@@ -315,7 +315,7 @@ GAMES = {
             (
                 "📌 نموونە",
                 "`{p} cf 500 t` ── ٥٠٠ شەرت لسەر پشتێ\n"
-                "`{p} cf سەر 100` ── ڕیزبەندی ژی بەلاڤ نینە، هەردوو کار دکەن\n"
+                "`{p} cf سەر 100` ── ڕیزا نڤیسینێ ژی گرنگ نینە، هەردوو کار دکەن\n"
                 "⏱️ ناڤبەرا دوو یاریان دڤێت چەند چرکەیەکان چاڤەڕێ بکەی",
             ),
         ],
@@ -324,190 +324,190 @@ GAMES = {
 
 
 # ═══════════════════════════════════════
-# بەشی ٢.٦: ڕێنمایی ڕاوکردن (دوای کلیککردن لە "ڕاوکردن" دەردەکەوێت)
-# هەر لاپەڕەیەک چەند بلۆکێکی ڕوونی هەیە: (ناو، دەق)
-# {p} = هێمای فەرمان. لاپەڕەی نوێ؟ تەنها بلۆکێکی نوێ زیاد بکە
+# بەشێ ٢.٦: ڕێنمایا ڕاوکرنێ (پشتی کلیککرنێ ل "ڕاوکرن" دیار دبیت)
+# هەر لاپەڕەکێ چەند بلۆکێن ڕوون هەنە: (ناڤ، دەق)
+# {p} = هێمایا فەرمانێ. لاپەڕەکا نوی؟ تەنێ بلۆکەکا نوی زێدە بکە
 # ═══════════════════════════════════════
 HUNT_QUICKSTART = (
-    "١️⃣ `{p} hunt` ── ئاژەڵێک ڕاو بکە 🐾\n"
-    "٢️⃣ `{p} zoo` ── سەیری کۆکراوەکانت بکە 🏞️\n"
-    "٣️⃣ `{p} sell all` ── بیانفرۆشە و دراو وەربگرە 💰"
+    "١️⃣ `{p} hunt` ── ئاژەلەکێ ڕاو بکە 🐾\n"
+    "٢️⃣ `{p} zoo` ── سەیری کۆمکرنا خوە بکە 🏞️\n"
+    "٣️⃣ `{p} sell all` ── بفرۆشە و دراو وەربگرە 💰"
 )
 
 HUNT_PAGES = {
     "start": {
         "emoji": "🚀",
-        "title": "دەستپێکردن",
-        "short": "ڕاوکردن و بینینی ئاژەڵەکانت",
+        "title": "دەستپێکرن",
+        "short": "ڕاوکرن و دیتنا ئاژەلێن تە",
         "color": 0x2ECC71,
         "sections": [
             (
-                "🐾 ڕاوکردن",
+                "🐾 ڕاوکرن",
                 "`{p} hunt`\n"
-                "┕ ئاژەڵێکی هەڕەمەکی ڕاو دەکەیت (کورت: `{p} h`)\n"
-                f"┕ نرخ: **{HUNT_COST}** دراو ── چاوەڕێی: **{HUNT_COOLDOWN}** چرکە",
+                "┕ ئاژەلەکێ هەرەمەکی ڕاو دکەی (کورت: `{p} h`)\n"
+                f"┕ نرخ: **{HUNT_COST}** دراو ── چاڤەڕێ: **{HUNT_COOLDOWN}** چرکە",
             ),
             (
-                "🏞️ باخچەی ئاژەڵەکانت",
+                "🏞️ باخچەیا ئاژەلێن تە",
                 "`{p} zoo`\n"
-                "┕ هەموو ئاژەڵەکانت دەبینیت\n"
+                "┕ هەمی ئاژەلێن خوە دبینی\n"
                 "`{p} zoo rare`\n"
-                "┕ تەنها ئاژەڵە دەگمەنەکان (ناوی rarity بنووسە)\n"
+                "┕ تەنێ ئاژەلێن دەگمەن (ناڤێ rarity بنڤیسە)\n"
                 "`{p} zoo search wolf`\n"
-                "┕ بەدوای ئاژەڵێکدا بگەڕێ\n"
+                "┕ ل دویف ئاژەلەکی بگەڕە\n"
                 "`{p} zoo display`\n"
-                "┕ لیستێکی کورت، ڕیزکراو بەپێی rarity",
+                "┕ لیستەکا کورت، ڕیزکری ل دویف rarity",
             ),
             (
                 "📖 ئینسایکلۆپیدیا",
                 "`{p} owodex wolf`\n"
-                "┕ زانیاری تەواو دەربارەی ئاژەڵێک",
+                "┕ زانیاریێن تەمام دەربارێ ئاژەلەکی",
             ),
         ],
     },
     "sell": {
         "emoji": "💰",
-        "title": "فرۆشتن و پاراستن",
-        "short": "ئاژەڵەکان بفرۆشە، بیکە essence یان بیپارێزە",
+        "title": "فرۆتن و پاراستن",
+        "short": "ئاژەلان بفرۆشە، بکە essence یان بپارێزە",
         "color": 0xF1C40F,
         "sections": [
             (
-                "💵 فرۆشتن",
+                "💵 فرۆتن",
                 "`{p} sell wolf 3`\n"
-                "┕ ٣ دانە wolf دەفرۆشێت\n"
+                "┕ ٣ دانە wolf دفرۆشیت\n"
                 "`{p} sell common`\n"
-                "┕ هەموو ئاژەڵە common ەکان\n"
+                "┕ هەمی ئاژەلێن common\n"
                 "`{p} sell all`\n"
-                "┕ هەموو ئاژەڵەکان (جگە لەوانەی lock کراون)",
+                "┕ هەمی ئاژەل (ژ بلی ئەوێن lock کری)",
             ),
             (
                 "💠 Essence",
                 "`{p} sacrifice wolf`\n"
-                "┕ ئاژەڵەکە دەکات بە essence بەجیاتی دراو (کورت: `{p} sac`)\n"
+                "┕ ئاژەلی دکەتە essence ب جهێ دراوی (کورت: `{p} sac`)\n"
                 "`{p} essence`\n"
-                "┕ بڕی essence ی خۆت دەبینیت\n"
-                "💡 essence بۆ باشکردنی Huntbot بەکاردێت",
+                "┕ بڕێ essenceا خوە دبینی\n"
+                "💡 essence بۆ باشکرنا Huntbotی دهێتە بکارئینان",
             ),
             (
                 "🔒 پاراستن",
                 "`{p} lock wolf`\n"
-                "┕ ئاژەڵەکە ناکەوێتە ناو `sell all`\n"
+                "┕ ئاژەل نەکەڤیتە ناڤ `sell all`\n"
                 "`{p} unlock wolf`\n"
-                "┕ دووبارە دەتوانرێت بفرۆشرێت",
+                "┕ دوبارە دشێی بفرۆشی",
             ),
         ],
     },
     "team": {
         "emoji": "⚔️",
-        "title": "تیمی ئاژەڵەکان",
-        "short": "ئاژەڵی دڵخوازت بخە ناو تیم و XP وەربگرە",
+        "title": "تیما ئاژەلان",
+        "short": "ئاژەلێ دلخوازا خوە بخە ناڤ تیمێ و XP وەربگرە",
         "color": 0xE67E22,
         "sections": [
             (
-                "📖 تیم چییە؟",
-                "ئەو ئاژەڵانەی دەیانخەیتە ناو تیمەکەت، لەگەڵ هەر ڕاوکردنێک **XP** وەردەگرن و بەهێز دەبن",
+                "📖 تیم چیە؟",
+                "ئەو ئاژەلێن تو دکەیە ناڤ تیما خوە، دگەل هەر ڕاوکرنەکێ **XP** وەردگرن و بهێز دبن",
             ),
             (
-                "🛠️ فەرمانەکان",
+                "🛠️ فەرمان",
                 "`{p} team`\n"
-                "┕ تیمەکەت دەبینیت\n"
+                "┕ تیما خوە دبینی\n"
                 "`{p} team add wolf`\n"
-                "┕ ئاژەڵێک دەخاتە ناو تیم\n"
+                "┕ ئاژەلەکێ دکەتە ناڤ تیمێ\n"
                 "`{p} team remove wolf`\n"
-                "┕ لە تیم دەری دەهێنێت\n"
-                "`{p} rename wolf ناوی-نوێ`\n"
-                "┕ ناوی ئاژەڵەکەت دەگۆڕیت",
+                "┕ ژ تیمێ دەردئینیت\n"
+                "`{p} rename wolf ناڤێ-نوی`\n"
+                "┕ ناڤێ ئاژەلێ خوە دگۆڕی",
             ),
         ],
     },
     "items": {
         "emoji": "💎",
         "title": "Gem و Lootbox",
-        "short": "گەنجینە و ئامرازە تایبەتەکانت",
+        "short": "گەنجینە و ئامرازێن تایبەتێن تە",
         "color": 0x9B59B6,
         "sections": [
             (
                 "💎 Gem",
                 "`{p} gems`\n"
-                "┕ gem ەکانت دەبینیت\n"
+                "┕ gemێن خوە دبینی\n"
                 "`{p} use <id>`\n"
-                "┕ gem ێک چالاک دەکات (id لە `{p} gems` دەبینیت)\n"
+                "┕ gemەکێ چالاک دکەت (id ژ `{p} gems` دبینی)\n"
                 "`{p} geminfo <id>`\n"
-                "┕ زانیاری gem ێک",
+                "┕ زانیاریێن gemەکێ",
             ),
             (
                 "🎁 Lootbox",
                 "`{p} lootbox`\n"
-                "┕ بۆکسەکانت دەبینیت\n"
+                "┕ بۆکسێن خوە دبینی\n"
                 "`{p} lootbox open`\n"
-                "┕ بۆکسێک دەکەیتەوە و خەڵات وەردەگریت\n"
+                "┕ بۆکسەکێ ڤەدکەی و خەلاتان وەردگری\n"
                 "`{p} lootbox history`\n"
-                "┕ دوایین خەڵاتەکانت",
+                "┕ دویماهیک خەلاتێن تە",
             ),
             (
-                "🎒 شتەکانت",
+                "🎒 تشتێن تە",
                 "`{p} inventory`\n"
-                "┕ هەموو شتەکانت (کورت: `{p} bag`)\n"
+                "┕ هەمی تشتێن خوە (کورت: `{p} bag`)\n"
                 "`{p} buffs`\n"
-                "┕ تەنها buff ە چالاکەکان",
+                "┕ تەنێ buffێن چالاک",
             ),
         ],
     },
     "huntbot": {
         "emoji": "🤖",
         "title": "Huntbot",
-        "short": "بۆتێک کە لە ئۆفلاینیشدا بۆت ڕاو دەکات",
+        "short": "بوتەک کو د ئۆفلاینیا تە دا ڕاو دکەت",
         "color": 0x3498DB,
         "sections": [
             (
-                "📖 Huntbot چییە؟",
-                "بۆتێکە ئاژەڵ ڕاو دەکات **تەنانەت کاتێک تۆ ئۆفلاینیت**. دەینێریت، دواتر ئاژەڵەکان وەردەگریتەوە",
+                "📖 Huntbot چیە؟",
+                "بوتەکە ئاژەلان ڕاو دکەت **تەنانەت دەمێ تو ئۆفلاینی**. تو دنێری، پاشی ئاژەلان وەردگری",
             ),
             (
-                "🚀 چۆن بەکاری دەهێنم؟",
-                "١️⃣ `{p} hb start` ── بۆتەکە دەنێریت بۆ ڕاو\n"
-                "٢️⃣ چاوەڕێ بکە تا تەواو دەبێت\n"
-                "٣️⃣ `{p} hb claim` ── ئاژەڵەکان وەردەگریت",
+                "🚀 چەوا بکاردئینم؟",
+                "١️⃣ `{p} hb start` ── بوتی دنێری بۆ ڕاوێ\n"
+                "٢️⃣ چاڤەڕێ بکە هەتا تەمام دبیت\n"
+                "٣️⃣ `{p} hb claim` ── ئاژەلان وەردگری",
             ),
             (
-                "🔧 باشکردن",
+                "🔧 باشکرن",
                 "`{p} hb upgrade`\n"
-                "┕ لیستی باشکردنەکان و نرخیان\n"
+                "┕ لیستا باشکرنان و نرخێن وان\n"
                 "`{p} hb upgrade <stat>`\n"
-                "┕ بەشێک باش دەکات بە **essence** 💠",
+                "┕ بەشەکێ باش دکەت ب **essence** 💠",
             ),
         ],
     },
     "stats": {
         "emoji": "📈",
         "title": "ئامار و Event",
-        "short": "ئامار، لیستی پێشەنگ و event ە چالاکەکان",
+        "short": "ئامار، لیستا پێشەنگان و eventێن چالاک",
         "color": 0xE74C3C,
         "sections": [
             (
                 "📊 ئامار",
                 "`{p} huntstats`\n"
-                "┕ ئاماری ڕاوکردنی خۆت (کورت: `{p} hs`)",
+                "┕ ئاماریێن ڕاوکرنا خوە (کورت: `{p} hs`)",
             ),
             (
-                "🏆 پێشەنگەکان",
+                "🏆 پێشەنگ",
                 "`{p} huntlb`\n"
-                "┕ باشترین ڕاوکەرەکان (کورت: `{p} hlb`)",
+                "┕ باشترین ڕاوکەر (کورت: `{p} hlb`)",
             ),
             (
                 "🎃 Event",
                 "`{p} events`\n"
-                "┕ event ە چالاکەکان (Halloween، Christmas ...)",
+                "┕ eventێن چالاک (Halloween، Christmas ...)",
             ),
         ],
     },
 }
 
 # ═══════════════════════════════════════
-# بەشی ٣: کارتەکان
+# بەشێ ٣: کارت
 # ═══════════════════════════════════════
 
-# هێما بەکارهێنراوەکان بۆ نیشاندان (z · zero)
+# هێمایێن بکارهاتی بۆ نیشاندانێ (z · zero)
 def prefixes_text():
     names = [PREFIX] + [p for p in EXTRA_PREFIXES if p.lower() != PREFIX.lower()]
     return " · ".join(f"`{n} `" for n in names)
@@ -515,7 +515,7 @@ def prefixes_text():
 def render(text):
     return text.replace("{p}", PREFIX)
 
-# کارتی لاپەڕەی سەرەکی
+# کارتا لاپەڕا سەرەکی
 def home_embed(ctx, invite_url):
     total = sum(len(c["commands"]) for c in CATEGORIES.values())
     name = discord.utils.escape_markdown(ctx.author.display_name)
@@ -524,9 +524,9 @@ def home_embed(ctx, invite_url):
     )
     names = " ‧ ".join(f"`{n}`" for n in [PREFIX] + [p for p in EXTRA_PREFIXES if p.lower() != PREFIX.lower()])
     embed = make_embed(
-        f"{BOT_NAME} ─ ناوەندی یارمەتی",
+        f"{BOT_NAME} ─ ناڤەندا یارمەتیێ",
         (
-            f"👋 سڵاو **{name}**!\n"
+            f"👋 سلاڤ **{name}**!\n"
             f"ژ لیستا خوارێ **بەشەکێ هەلبژێرە** دا فەرمانێن وێ ببینی.\n\n"
             f"{DIVIDER}\n{cats}\n{DIVIDER}\n\n"
             f"🚀 **دەستپێک:** `{PREFIX} daily` ‧ `{PREFIX} bank` ‧ `{PREFIX} slots 100`\n"
@@ -545,7 +545,7 @@ def home_embed(ctx, invite_url):
         embed.set_image(url=src)
     return embed
 
-# کارتی هەر بەشێک
+# کارتا هەر بەشەکێ
 def category_embed(ctx, key):
     c = CATEGORIES[key]
     lines = "\n\n".join(
@@ -557,13 +557,13 @@ def category_embed(ctx, key):
         color=c["color"],
         ctx=ctx,
     )
-    embed.set_author(name=f"{BOT_NAME} • ناوەندی یارمەتی", icon_url=ctx.bot.user.display_avatar.url)
+    embed.set_author(name=f"{BOT_NAME} • ناڤەندا یارمەتیێ", icon_url=ctx.bot.user.display_avatar.url)
     src = gif_source()
     if src:
         embed.set_image(url=src)
     return embed
 
-# کارتی لیستی یارییەکان (دوای کلیک لە "یاری")
+# کارتا لیستا یاریان (پشتی کلیکێ ل "یاری")
 def games_overview_embed(ctx):
     c = CATEGORIES["games"]
     games_list = "\n".join(
@@ -579,41 +579,41 @@ def games_overview_embed(ctx):
         color=c["color"],
         ctx=ctx,
     )
-    embed.set_author(name=f"{BOT_NAME} • ناوەندی یارمەتی", icon_url=ctx.bot.user.display_avatar.url)
+    embed.set_author(name=f"{BOT_NAME} • ناڤەندا یارمەتیێ", icon_url=ctx.bot.user.display_avatar.url)
     src = gif_source()
     if src:
         embed.set_image(url=src)
     return embed
 
-# کارتی سەرەکی ڕاوکردن (دوای کلیک لە "ڕاوکردن")
+# کارتا سەرەکی یا ڕاوکرنێ (پشتی کلیکێ ل "ڕاوکرن")
 def hunt_overview_embed(ctx):
     c = CATEGORIES["hunt"]
     pages = "\n".join(
         f"{p['emoji']} **{p['title']}** ── {p['short']}" for p in HUNT_PAGES.values()
     )
     embed = make_embed(
-        f"{c['emoji']}  ڕاوکردن (Zero Hunt)",
+        f"{c['emoji']}  ڕاوکرن (Zero Hunt)",
         (
-            "> ئاژەڵ ڕاو بکە، کۆیان بکەرەوە، بیانفرۆشە و بەهێزتر ببە ✨\n"
+            "> ئاژەل ڕاو بکە، کۆم بکە، بفرۆشە و بهێزتر ببە ✨\n"
             f"{DIVIDER}"
         ),
         color=c["color"],
         ctx=ctx,
     )
-    embed.add_field(name="⚡ دەستپێکی خێرا", value=render(HUNT_QUICKSTART), inline=False)
-    embed.add_field(name="📂 بەشەکان", value=pages, inline=False)
+    embed.add_field(name="⚡ دەستپێکا خێرا", value=render(HUNT_QUICKSTART), inline=False)
+    embed.add_field(name="📂 بەش", value=pages, inline=False)
     embed.add_field(
-        name="👇 چۆن بەکاری بهێنم؟",
-        value="لە لیستی خوارەوە بەشێک هەڵبژێرە بۆ بینینی فەرمانەکان بە ڕوونی",
+        name="👇 چەوا بکاربینم؟",
+        value="ژ لیستا خوارێ بەشەکێ هەلبژێرە بۆ دیتنا فەرمانان ب ڕوونی",
         inline=False,
     )
-    embed.set_author(name=f"{BOT_NAME} • ناوەندی یارمەتی", icon_url=ctx.bot.user.display_avatar.url)
+    embed.set_author(name=f"{BOT_NAME} • ناڤەندا یارمەتیێ", icon_url=ctx.bot.user.display_avatar.url)
     src = gif_source()
     if src:
         embed.set_image(url=src)
     return embed
 
-# کارتی هەر لاپەڕەیەکی ڕاوکردن
+# کارتا هەر لاپەڕەکا ڕاوکرنێ
 def hunt_page_embed(ctx, key):
     p = HUNT_PAGES[key]
     embed = make_embed(
@@ -624,10 +624,10 @@ def hunt_page_embed(ctx, key):
     )
     for name, value in p["sections"]:
         embed.add_field(name=name, value=render(value), inline=False)
-    embed.set_author(name=f"{BOT_NAME} • ڕێنمایی ڕاوکردن", icon_url=ctx.bot.user.display_avatar.url)
+    embed.set_author(name=f"{BOT_NAME} • ڕێنمایا ڕاوکرنێ", icon_url=ctx.bot.user.display_avatar.url)
     return embed
 
-# کارتی یاسای هەر یارییەک
+# کارتا یاسایا هەر یاریەکێ
 def game_embed(ctx, key):
     g = GAMES[key]
     embed = make_embed(
@@ -638,21 +638,21 @@ def game_embed(ctx, key):
     )
     for name, value in g["sections"]:
         embed.add_field(name=name, value=render(value), inline=False)
-    embed.set_author(name=f"{BOT_NAME} • یاسای یاری", icon_url=ctx.bot.user.display_avatar.url)
+    embed.set_author(name=f"{BOT_NAME} • یاسایا یاریێ", icon_url=ctx.bot.user.display_avatar.url)
     src = gif_source()
     if src:
         embed.set_image(url=src)
     return embed
 
 # ═══════════════════════════════════════
-# بەشی ٤: لیست و دوگمەکان
+# بەشێ ٤: لیست و دوگمە
 # ═══════════════════════════════════════
 
 class CategorySelect(discord.ui.Select):
     def __init__(self):
         options = [
             discord.SelectOption(
-                label="لاپەڕەی سەرەکی", value="home", emoji="🏠", description="گەڕانەوە بۆ سەرەتا"
+                label="لاپەڕا سەرەکی", value="home", emoji="🏠", description="زڤڕین بۆ دەستپێکێ"
             )
         ]
         for key, c in CATEGORIES.items():
@@ -662,7 +662,7 @@ class CategorySelect(discord.ui.Select):
                     description=f"{home_short(key)} • {len(c['commands'])} فەرمان"[:100],
                 )
             )
-        super().__init__(placeholder="📂 بەشێک هەڵبژێرە...", min_values=1, max_values=1, options=options, row=0)
+        super().__init__(placeholder="📂 بەشەکێ هەلبژێرە...", min_values=1, max_values=1, options=options, row=0)
 
     async def callback(self, interaction: discord.Interaction):
         view = self.view
@@ -675,16 +675,16 @@ class CategorySelect(discord.ui.Select):
             embed = hunt_overview_embed(view.ctx)
         else:
             embed = category_embed(view.ctx, key)
-        # لیستی دووەم تەنها لە بەشی "یاری" و "ڕاوکردن" دەردەکەوێت
+        # لیستا دووەم تەنێ ل بەشێن "یاری" و "ڕاوکرن" دیار دبیت
         view.show_sub_menu(key if key in ("games", "hunt") else None)
         await interaction.response.edit_message(embed=embed, view=view)
 
-# لیستی دووەم: ناوی یارییەکان (تەنها دوای کلیک لە بەشی یاری دەردەکەوێت)
+# لیستا دووەم: ناڤێن یاریان (تەنێ پشتی کلیکێ ل بەشێ یاری دیار دبیت)
 class GameSelect(discord.ui.Select):
     def __init__(self):
         options = [
             discord.SelectOption(
-                label="هەمی یاری", value="all", emoji="📋", description="گەڕان بۆ لیستا یاریان"
+                label="هەمی یاری", value="all", emoji="📋", description="زڤڕین بۆ لیستا یاریان"
             )
         ]
         for key, g in GAMES.items():
@@ -702,19 +702,19 @@ class GameSelect(discord.ui.Select):
             embed = game_embed(view.ctx, key)
         await interaction.response.edit_message(embed=embed, view=view)
 
-# لیستی دووەم بۆ ڕاوکردن
+# لیستا دووەم بۆ ڕاوکرنێ
 class HuntSelect(discord.ui.Select):
     def __init__(self):
         options = [
             discord.SelectOption(
-                label="سەرەتای ڕاوکردن", value="all", emoji="🏠", description="گەڕانەوە بۆ کارتی سەرەکی"
+                label="دەستپێکا ڕاوکرنێ", value="all", emoji="🏠", description="زڤڕین بۆ کارتا سەرەکی"
             )
         ]
         for key, p in HUNT_PAGES.items():
             options.append(
                 discord.SelectOption(label=p["title"], value=key, emoji=p["emoji"], description=p["short"][:100])
             )
-        super().__init__(placeholder="🐾 بەشێکی ڕاوکردن هەڵبژێرە...", min_values=1, max_values=1, options=options, row=1)
+        super().__init__(placeholder="🐾 بەشەکێ ڕاوکرنێ هەلبژێرە...", min_values=1, max_values=1, options=options, row=1)
 
     async def callback(self, interaction: discord.Interaction):
         view = self.view
@@ -727,20 +727,20 @@ class HuntSelect(discord.ui.Select):
 
 class HelpView(discord.ui.View):
     def __init__(self, ctx, invite_url):
-        super().__init__(timeout=180)  # دوای ٣ خولەک ناچالاک دەبێت
+        super().__init__(timeout=180)  # پشتی ٣ خولەکان ناچالاک دبیت
         self.ctx = ctx
         self.invite_url = invite_url
         self.message = None
-        self.sub_select = None   # لیستی دووەم (یارییەکان یان بەشەکانی ڕاوکردن)
+        self.sub_select = None   # لیستا دووەم (یاری یان بەشێن ڕاوکرنێ)
         self.sub_kind = None
 
         self.add_item(CategorySelect())
-        # دوگمەکانی لینک (ڕیزی سێیەم، چونکە ڕیزی دووەم بۆ لیستی یارییەکانە)
-        self.add_item(discord.ui.Button(label="زیادکردنی بوت", url=invite_url, emoji="🤖", row=2))
+        # دوگمەیێن لینکێ (ڕیزا سیێ، چونکی ڕیزا دووێ بۆ لیستا یاریانە)
+        self.add_item(discord.ui.Button(label="زێدەکرنا بوتی", url=invite_url, emoji="🤖", row=2))
         if SUPPORT_URL:
-            self.add_item(discord.ui.Button(label="سێرڤەری ساپۆرت", url=SUPPORT_URL, emoji="💬", row=2))
+            self.add_item(discord.ui.Button(label="سێرڤەرێ ساپۆرتێ", url=SUPPORT_URL, emoji="💬", row=2))
 
-    # لیستی دووەم پیشان بدە یان بیشارەوە (kind: "games" / "hunt" / None)
+    # لیستا دووەم نیشان بدە یان بشارەڤە (kind: "games" / "hunt" / None)
     def show_sub_menu(self, kind):
         if kind == self.sub_kind:
             return
@@ -755,11 +755,11 @@ class HelpView(discord.ui.View):
             self.add_item(self.sub_select)
         self.sub_kind = kind
 
-    # تەنها خاوەنی help دەتوانێت بەکاری بهێنێت
+    # تەنێ خودانێ help دشێت بکاربینیت
     async def interaction_check(self, interaction):
         if interaction.user.id != self.ctx.author.id:
             await interaction.response.send_message(
-                f"❌ ئەم مینیوەیە بۆ کەسێکی ترە. خۆت `{PREFIX} help` بنووسە.", ephemeral=True
+                f"❌ ئەڤ مینیۆیە بۆ کەسەکێ دی یە. خوە `{PREFIX} help` بنڤیسە.", ephemeral=True
             )
             return False
         return True
@@ -775,7 +775,7 @@ class HelpView(discord.ui.View):
                 pass
 
 # ═══════════════════════════════════════
-# Cog: بەشێکی جیاکراوەی بوتەکە
+# Cog: بەشەکێ جوداکری یێ بوتی
 # ═══════════════════════════════════════
 class HelpCog(commands.Cog):
     def __init__(self, bot):

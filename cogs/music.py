@@ -16,46 +16,46 @@ from database import db
 from utils import make_embed, PREFIX, BOT_NAME, PURPLE, GOLD, SUCCESS, ERROR, WARN
 
 # ═══════════════════════════════════════
-# Zero Music ─ بەشی میوزیک
-# - کارتەکان بە make_embed ی utils.py دروست دەبن (هەمان دیزاینی بوتەکە)
-# - هێما لە utils.py وەردەگیرێت: z play / zero play / z! play
-# - لە bot.py دا زیادی بکە:  await bot.load_extension("cogs.music")
-# پێویستی: pip install yt-dlp PyNaCl   +   pkg install ffmpeg libopus (Termux)
+# Zero Music ─ بەشێ میوزیکێ
+# - کارت ب make_embed یا utils.py دهێنە چێکرن (هەمان دیزاینا بوتی)
+# - هێما ژ utils.py دهێتە وەرگرتن: z play / zero play / z! play
+# - ل bot.py دا زێدە بکە:  await bot.load_extension("cogs.music")
+# پێدڤی: pip install yt-dlp PyNaCl   +   pkg install ffmpeg libopus (Termux)
 # ═══════════════════════════════════════
 
 # ═══════════════════════════════════════
-# بەشی ١: ڕێکخستنەکان (لێرە دەستکاری بکە)
+# بەشێ ١: ڕێکخستن (ل ڤێرە دەستکاری بکە)
 # ═══════════════════════════════════════
 
-DEFAULT_VOLUME = 0.8          # دەنگی سەرەتا (٨٠٪)
-MAX_VOLUME = 1.5              # بەرزترین دەنگ (١٥٠٪)
-VOLUME_STEP = 0.1             # هەر کلیکێکی 🔉 / 🔊 چەند دەگۆڕێت (١٠٪)
-MAX_QUEUE = 50                # زۆرترین گۆرانی لە ڕیزبەندیدا
-MAX_SONG_MINUTES = 720        # درێژترین گۆرانی (بە خولەک). ٧٢٠ = ١٢ کاتژمێر. 0 = بێ سنوور
-STREAM_OVER_MINUTES = 30      # گۆرانی لەمە درێژتر دانابەزێت و ڕاستەوخۆ stream دەکرێت (باشترە بۆ ڤیدیۆی ١٠ کاتژمێری). 0 = هەمووی دابەزێنە
-MAX_STREAM_RETRIES = 8        # ئەگەر stream پچڕا، چەند جار دووبارە لەو شوێنەوە بەردەوام بێت
-IDLE_DISCONNECT = 120         # ئەگەر هیچ نەلێدرا، دوای چەند چرکە بچێتە دەرەوە
-ALONE_DISCONNECT = 60         # ئەگەر بوت تەنها مایەوە لە ڤۆیس، دوای چەند چرکە بچێتە دەرەوە
-PROGRESS_REFRESH = 8          # نوێکردنەوەی شریتی کات (چرکە). لە ٥ کەمتر مەیکە، Discord سنووری هەیە
-BAR_LENGTH = 14               # درێژی شریتی کات
-QUEUE_PER_PAGE = 8            # چەند گۆرانی لە هەر پەڕەیەکی ڕیزبەندی
-MENU_IMAGE = None             # وێنەی داشبۆرد (لینک). ئەگەر نەتەوێت: None
-STAY_IN_VOICE = False         # True = بوت هەرگیز بە خۆی لە ڤۆیس دەرناچێت (٢٤/٧). تەنها بە z stop دەچێتە دەرەوە
-AUDIO_FILTER = "dynaudnorm=f=150:g=15"  # دەنگی هاوسەنگ و ساف (دەنگی گۆرانییەکان یەکسان دەکات). نەتەوێت: ""
-BIG_COVER = True              # True = وێنەی گۆرانی گەورە (وەک Spotify). False = وێنەی بچووک لە لاوە
-UPNEXT_SHOWN = 3              # چەند گۆرانی داهاتوو لە کارتەکەدا نیشان بدرێت
-SEEK_SECONDS = 10             # دوگمەکانی ⏪ / ⏩ چەند چرکە بپەڕێنن
-HISTORY_SIZE = 20             # چەند گۆرانی پێشوو بۆ دوگمەی ⏮️ هەڵبگیرێت
-MAX_PLAYLISTS = 10            # هەر کەسێک چەند لیستی خۆی دروست بکات
-MAX_PLAYLIST_TRACKS = 100     # زۆرترین گۆرانی لە یەک لیستدا
-MAX_PLAYLIST_NAME = 30        # زۆرترین پیتی ناوی لیست
-RECENT_LIMIT = 25             # چەند گۆرانی کۆتا هەڵبگیرێت (Recently Played)
-LIB_PER_PAGE = 8              # چەند گۆرانی لە هەر پەڕەیەکی کتێبخانە
+DEFAULT_VOLUME = 0.8          # دەنگێ دەستپێکێ (٪٨٠)
+MAX_VOLUME = 1.5              # بلندترین دەنگ (٪١٥٠)
+VOLUME_STEP = 0.1             # هەر کلیکەکا 🔉 / 🔊 چەند دگۆڕیت (٪١٠)
+MAX_QUEUE = 50                # زۆرترین گۆرانی د ڕیزێ دا
+MAX_SONG_MINUTES = 720        # درێژترین گۆرانی (ب خولەک). ٧٢٠ = ١٢ دەمژمێر. 0 = بێ سنوور
+STREAM_OVER_MINUTES = 30      # گۆرانیێن ژ ڤێ درێژتر دانابەزن و ڕاستەخۆ stream دبن (باشترە بۆ ڤیدیۆیا ١٠ دەمژمێران). 0 = هەمیان دابەزینە
+MAX_STREAM_RETRIES = 8        # ئەگەر stream پچڕی، چەند جاران دوبارە ژ وی جهی بەردەوام بیت
+IDLE_DISCONNECT = 120         # ئەگەر چ نەهاتە لێدان، پشتی چەند چرکەیان بچیتە دەر
+ALONE_DISCONNECT = 60         # ئەگەر بوت تەنێ مایەوە ل ڤۆیسێ، پشتی چەند چرکەیان بچیتە دەر
+PROGRESS_REFRESH = 8          # نویکرنا شریتا دەمی (چرکە). ژ ٥ کێمتر نەکە، Discord سنوور هەیە
+BAR_LENGTH = 14               # درێژیا شریتا دەمی
+QUEUE_PER_PAGE = 8            # چەند گۆرانی ل هەر لاپەڕەکا ڕیزێ
+MENU_IMAGE = None             # وێنەیێ داشبۆردێ (لینک). ئەگەر نەڤێت: None
+STAY_IN_VOICE = False         # True = بوت چ جاران ب خۆ ژ ڤۆیسێ دەرناکەڤیت (٢٤/٧). تەنێ ب z stop دچیتە دەر
+AUDIO_FILTER = "dynaudnorm=f=150:g=15"  # دەنگێ هاوسەنگ و ساف (دەنگێ گۆرانیان وەک ئێک دکەت). نەڤێت: ""
+BIG_COVER = True              # True = وێنەیێ گۆرانیێ مەزن (وەک Spotify). False = وێنەیێ بچووک ل لاکێ
+UPNEXT_SHOWN = 3              # چەند گۆرانیێن ل دویڤ د کارتێ دا بهێنە نیشاندان
+SEEK_SECONDS = 10             # دوگمەیێن ⏪ / ⏩ چەند چرکەیان بپەڕینن
+HISTORY_SIZE = 20             # چەند گۆرانیێن بەری نوکە بۆ دوگمەیا ⏮️ بهێنە هەلگرتن
+MAX_PLAYLISTS = 10            # هەر کەسەک چەند لیستێن خوە چێبکەت
+MAX_PLAYLIST_TRACKS = 100     # زۆرترین گۆرانی د یەک لیستێ دا
+MAX_PLAYLIST_NAME = 30        # زۆرترین پیتێن ناڤێ لیستێ
+RECENT_LIMIT = 25             # چەند دویماهیک گۆرانی بهێنە هەلگرتن (Recently Played)
+LIB_PER_PAGE = 8              # چەند گۆرانی ل هەر لاپەڕەکا کتێبخانێ
 DOWNLOAD_DIR = "downloads"
 
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-# لێدانی ڤۆیس لە Termux پێویستی بە libopus هەیە
+# لێدانا ڤۆیسێ ل Termux پێدڤی ب libopus یە
 if not discord.opus.is_loaded():
     for _name in ("libopus.so", "libopus.so.0", "opus"):
         try:
@@ -90,7 +90,7 @@ def ffmpeg_options():
         opts += f" -af {shlex.quote(AUDIO_FILTER)}"
     return opts
 
-# بیتڕەیتی ڤۆیس بەرز دەکاتەوە بۆ ئەوپەڕی ڕێگەپێدراوی ژوورەکە، و دەنگ بۆ مۆدی میوزیک دادەنێت
+# بیتڕەیتا ڤۆیسێ بلند دکەت هەتا ئەوپەڕێ ڕێپێدایی یێ ژوورێ، و دەنگی بۆ مۆدا میوزیکێ دانیت
 def tune_encoder(vc):
     enc = getattr(vc, "encoder", None)
     if not enc:
@@ -105,11 +105,11 @@ def tune_encoder(vc):
         except Exception:
             pass
 
-# ناوی دۆخەکانی دووبارەکردنەوە
-LOOP_TEXT = {"off": "ناچالاک", "song": "🔂 گۆرانی", "queue": "🔁 ڕیزبەندی"}
+# ناڤێن دۆخێن دوبارەکرنەڤە
+LOOP_TEXT = {"off": "ناچالاک", "song": "🔂 گۆرانی", "queue": "🔁 ڕیز"}
 LOOP_NEXT = {"off": "song", "song": "queue", "queue": "off"}
 
-# هونەرمەندان و گۆرانییەکانیان (بۆ z menu)
+# هونەرمەند و گۆرانیێن وان (بۆ z menu)
 ARTISTS_DATA = {
     "bilind": {
         "name": "بلند ئیبراهیم",
@@ -169,7 +169,7 @@ ARTISTS_DATA = {
 }
 
 # ═══════════════════════════════════════
-# بەشی ٢: فەرمانە یارمەتیدەرەکان
+# بەشێ ٢: فەرمانێن هاریکار
 # ═══════════════════════════════════════
 
 def fmt_time(seconds):
@@ -182,7 +182,7 @@ def trim(text, limit):
     text = str(text)
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
-# شریتی کات: ▬▬▬🔘▬▬▬▬
+# شریتا دەمی: ▬▬▬🔘▬▬▬▬
 def progress_bar(elapsed, total, length=BAR_LENGTH):
     if total <= 0:
         return "▬" * length
@@ -190,12 +190,12 @@ def progress_bar(elapsed, total, length=BAR_LENGTH):
     pos = min(int(length * ratio), length - 1)
     return "▬" * pos + "🔘" + "▬" * (length - pos - 1)
 
-# شریتی دەنگ: ▰▰▰▰▰▱▱▱
+# شریتا دەنگی: ▰▰▰▰▰▱▱▱
 def volume_bar(volume, length=8):
     filled = min(max(round(volume / MAX_VOLUME * length), 0), length)
     return "▰" * filled + "▱" * (length - filled)
 
-# z seek: "90" / "1:30" / "1:02:03" ڕاستەوخۆ، یان "+30" / "-15" بەرامبەر بە ئێستا
+# z seek: "90" / "1:30" / "1:02:03" ڕاستەخۆ، یان "+30" / "-15" بەرامبەری نوکە
 def parse_seek(text, current):
     text = text.strip()
     sign = 0
@@ -210,12 +210,12 @@ def parse_seek(text, current):
         secs = secs * 60 + int(p)
     return current + sign * secs if sign else secs
 
-# کارتی هەڵە / ئاگاداری / سەرکەوتن
+# کارتا خەلەتیێ / ئاگەهداریێ / سەرکەفتنێ
 def error_embed(text, ctx=None):
-    return make_embed("❌ هەڵە", text, color=ERROR, ctx=ctx)
+    return make_embed("❌ خەلەتی", text, color=ERROR, ctx=ctx)
 
 def warn_embed(text, ctx=None):
-    return make_embed("⚠️ ئاگاداری", text, color=WARN, ctx=ctx)
+    return make_embed("⚠️ ئاگەهداری", text, color=WARN, ctx=ctx)
 
 def ok_embed(title, text, ctx=None):
     return make_embed(title, text, color=PURPLE, ctx=ctx)
@@ -247,8 +247,8 @@ def make_track(data, requester):
         is_live=bool(data.get("is_live")),
     )
 
-# yt-dlp: دەگەڕێت (download=False) یان دایدەبەزێنێت (download=True)
-# لە executor کار دەکات، چونکە دەبێتە هۆی وەستانی بوت
+# yt-dlp: دگەڕیت (download=False) یان دابەزینیت (download=True)
+# ل executor کار دکەت، چونکی دبیتە ئەگەرێ ڕاوەستانا بوتی
 def _extract(query, download, guild_id=0):
     opts = dict(YTDL_OPTIONS)
     opts["outtmpl"] = os.path.join(DOWNLOAD_DIR, f"%(id)s_{guild_id}.%(ext)s")
@@ -260,7 +260,7 @@ def _extract(query, download, guild_id=0):
             entries = [e for e in data["entries"] if e]
             data = entries[0] if entries else None
         if data is None:
-            raise RuntimeError("هیچ ئەنجامێک نەدۆزرایەوە")
+            raise RuntimeError("چ ئەنجام نەهاتنە دیتن")
         path = ytdl.prepare_filename(data) if download else None
     return data, path
 
@@ -270,7 +270,7 @@ class AudioSource(discord.PCMVolumeTransformer):
         super().__init__(discord.FFmpegPCMAudio(filepath, before_options=before, options=ffmpeg_options()), volume)
         self.filepath = filepath
 
-# stream ی ڕاستەوخۆ (بێ دابەزاندن). start_at = لە چەند چرکەوە دەست پێ بکات
+# streamا ڕاستەخۆ (بێ دابەزاندن). start_at = ژ چەند چرکەیان دەست پێ بکەت
 def make_stream_source(data, start_at, volume):
     headers = data.get("http_headers") or {}
     hdr = "".join(f"{k}: {v}\r\n" for k, v in headers.items())
@@ -282,25 +282,25 @@ def make_stream_source(data, start_at, volume):
     source = discord.FFmpegPCMAudio(data["url"], before_options=before, options=ffmpeg_options())
     return discord.PCMVolumeTransformer(source, volume)
 
-# دۆخی میوزیکی هەر سێرڤەرێک
+# دۆخێ میوزیکێ یێ هەر سێرڤەرەکی
 class GuildState:
     def __init__(self):
         self.queue = []
         self.current = None
         self.loop = "off"          # off / song / queue
         self.volume = DEFAULT_VOLUME
-        self.channel = None        # ژووری نووسینی دوایین داواکاری
-        self.message = None        # کارتی "ئێستا لێدەدرێت"
+        self.channel = None        # ژوورا نڤیسینێ یا دویماهیک داخوازیێ
+        self.message = None        # کارتا "نوکە دهێتە لێدان"
         self.view = None
         self.started_at = 0.0
         self.paused_at = None
         self.paused_total = 0.0
         self.skipped = False
-        self.history = []          # گۆرانییە پێشووەکان (بۆ ⏮️)
-        self.override = None       # گۆرانییەک کە دەبێت دواتر ڕاستەوخۆ بلێت (⏮️ / جەمپ)
+        self.history = []          # گۆرانیێن بەری نوکە (بۆ ⏮️)
+        self.override = None       # گۆرانیەک کو دڤێت پاشی ڕاستەخۆ بهێتە لێدان (⏮️ / جەمپ)
         self.going_back = False
         self.restart = False
-        self.seek_to = None        # ⏪ / ⏩ / z seek: لە چ چرکەیەکەوە دەست پێ بکاتەوە
+        self.seek_to = None        # ⏪ / ⏩ / z seek: ژ چ چرکەیەکێ دەست پێ بکەتەڤە
         self.lock = asyncio.Lock()
         self.progress_task = None
         self.idle_task = None
@@ -316,7 +316,7 @@ class GuildState:
         return max(int(now - self.started_at - self.paused_total), 0)
 
 # ═══════════════════════════════════════
-# بەشی ٣: دوگمەکانی کۆنتڕۆڵ
+# بەشێ ٣: دوگمەیێن کۆنتڕۆلێ
 # ═══════════════════════════════════════
 
 class JumpSelect(discord.ui.Select):
@@ -331,13 +331,13 @@ class JumpSelect(discord.ui.Select):
             )
             for n, t in enumerate(tracks, start=1)
         ]
-        super().__init__(placeholder="🎯 گۆرانییەک لە ڕیزبەندی هەڵبژێرە و ڕاستەوخۆ لێیبدە...", options=options, row=2)
+        super().__init__(placeholder="🎯 گۆرانیەکێ ژ ڕیزێ هەلبژێرە و ڕاستەخۆ لێدە...", options=options, row=2)
 
     async def callback(self, interaction):
         st = self.cog.states.get(interaction.guild.id)
         track = next((t for t in st.queue if str(id(t)) == self.values[0]), None) if st else None
         if track is None:
-            return await interaction.response.send_message("❌ ئەم گۆرانییە ئیتر لە ڕیزبەندیدا نییە.", ephemeral=True)
+            return await interaction.response.send_message("❌ ئەڤ گۆرانی ئی د ڕیزێ دا نینە.", ephemeral=True)
         await interaction.response.defer()
         self.cog.do_jump(interaction.guild, track)
 
@@ -348,20 +348,20 @@ class MusicControls(discord.ui.View):
         self.guild_id = guild_id
         self.jump = None
 
-    # تەنها ئەو کەسانەی لە هەمان ڤۆیسدان دەتوانن کۆنتڕۆڵ بکەن
+    # تەنێ ئەو کەسێن ل هەمان ڤۆیسێ دا دشێن کۆنتڕۆل بکەن
     async def interaction_check(self, interaction):
         vc = interaction.guild.voice_client if interaction.guild else None
         st = self.cog.states.get(self.guild_id)
         if not vc or not st or not st.current:
-            await interaction.response.send_message("❌ هیچ گۆرانییەک نالێدرێت.", ephemeral=True)
+            await interaction.response.send_message("❌ چ گۆرانی ناهێنە لێدان.", ephemeral=True)
             return False
         voice = getattr(interaction.user, "voice", None)
         if not voice or voice.channel != vc.channel:
-            await interaction.response.send_message("❌ دەبێت لەگەڵ بوت لە هەمان ڤۆیس بیت.", ephemeral=True)
+            await interaction.response.send_message("❌ دڤێت دگەل بوتی ل هەمان ڤۆیسێ بی.", ephemeral=True)
             return False
         return True
 
-    # دۆخی دوگمەکان و لیستی جەمپ لەگەڵ دۆخی ڕاستەقینە یەک دەخات
+    # دۆخێ دوگمەیان و لیستا جەمپێ دگەل دۆخێ ڕاستەقینە وەک ئێک دکەت
     def sync(self, paused, loop, queue):
         self.pause_btn.emoji = "▶️" if paused else "⏸️"
         self.pause_btn.style = discord.ButtonStyle.success if paused else discord.ButtonStyle.primary
@@ -380,12 +380,12 @@ class MusicControls(discord.ui.View):
         self.sync(guild.voice_client.is_paused(), st.loop, st.queue)
         await interaction.response.edit_message(embed=self.cog.now_embed(guild, st), view=self)
 
-    # ڕیزی ١: 🔀 ⏮️ ⏯️ ⏭️ 🔁
+    # ڕیزا ١: 🔀 ⏮️ ⏯️ ⏭️ 🔁
     @discord.ui.button(emoji="🔀", style=discord.ButtonStyle.secondary, row=0)
     async def shuffle_btn(self, interaction, button):
         st = self.cog.states[interaction.guild.id]
         if len(st.queue) < 2:
-            return await interaction.response.send_message("❌ پێویستە لانی کەم ٢ گۆرانی لە ڕیزبەندیدا بێت.", ephemeral=True)
+            return await interaction.response.send_message("❌ پێدڤییە لانیکەم ٢ گۆرانی د ڕیزێ دا هەبن.", ephemeral=True)
         random.shuffle(st.queue)
         await self._update(interaction)
 
@@ -411,12 +411,12 @@ class MusicControls(discord.ui.View):
         st.loop = LOOP_NEXT[st.loop]
         await self._update(interaction)
 
-    # ڕیزی ٢: ⏪ 🔉 ⏹️ 🔊 ⏩
+    # ڕیزا ٢: ⏪ 🔉 ⏹️ 🔊 ⏩
     async def _seek(self, interaction, delta):
         guild = interaction.guild
         st = self.cog.states[guild.id]
         if not st.current.duration:
-            return await interaction.response.send_message("❌ ماوەی ئەم گۆرانییە نەزانراوە.", ephemeral=True)
+            return await interaction.response.send_message("❌ دەمێ ڤێ گۆرانیێ نەهاتیە زانین.", ephemeral=True)
         await interaction.response.defer()
         self.cog.do_seek(guild, st.elapsed() + delta)
 
@@ -437,7 +437,7 @@ class MusicControls(discord.ui.View):
         channel = self.cog.states[guild.id].channel
         await self.cog.destroy(guild)
         if channel:
-            await channel.send(embed=warn_embed(f"⏹️ **{interaction.user.display_name}** میوزیکی ڕاگرت و بوت چووە دەرەوە."))
+            await channel.send(embed=warn_embed(f"⏹️ **{interaction.user.display_name}** میوزیک ڕاگرت و بوت چوو دەر."))
 
     @discord.ui.button(emoji="🔊", style=discord.ButtonStyle.secondary, row=1)
     async def vol_up_btn(self, interaction, button):
@@ -449,31 +449,31 @@ class MusicControls(discord.ui.View):
     async def fwd_btn(self, interaction, button):
         await self._seek(interaction, SEEK_SECONDS)
 
-    # ڕیزی ٤: ❤️ Like ┃ 💾 پاشەکەوت بۆ لیست
+    # ڕیزا ٤: ❤️ Like ┃ 💾 پاشەکەفتکرن بۆ لیستێ
     @discord.ui.button(emoji="❤️", label="Like", style=discord.ButtonStyle.secondary, row=3)
     async def like_btn(self, interaction, button):
         track = self.cog.states[interaction.guild.id].current
         res = lib_toggle_fav(interaction.user.id, track)
         text = {
-            "added": "❤️ زیاد کرا بۆ **Favorites**ـەکانت.",
-            "removed": "💔 لە **Favorites**ـەکانت لابرا.",
-            "full": f"❌ Favorites پڕە (**{MAX_PLAYLIST_TRACKS}** گۆرانی).",
+            "added": "❤️ هاتە زێدەکرن بۆ **Favorites**ێن تە.",
+            "removed": "💔 ژ **Favorites**ێن تە هاتە لابرن.",
+            "full": f"❌ Favorites تژییە (**{MAX_PLAYLIST_TRACKS}** گۆرانی).",
         }[res]
         await interaction.response.send_message(text, ephemeral=True)
 
-    @discord.ui.button(emoji="💾", label="پاشەکەوت", style=discord.ButtonStyle.secondary, row=3)
+    @discord.ui.button(emoji="💾", label="پاشەکەفتکرن", style=discord.ButtonStyle.secondary, row=3)
     async def save_btn(self, interaction, button):
         track = self.cog.states[interaction.guild.id].current
         pls = lib_custom(interaction.user.id)
         if not pls:
             return await interaction.response.send_message(
-                f"❌ هیچ لیستێکت نییە. `{PREFIX} playlist` بنووسە و دوگمەی ➕ دابگرە.", ephemeral=True)
+                f"❌ چ لیستێن تە نینن. `{PREFIX} playlist` بنڤیسە و دوگمەیا ➕ بگوشە.", ephemeral=True)
         view = discord.ui.View(timeout=60)
         view.add_item(SaveSelect(track, pls))
-        await interaction.response.send_message("💾 بۆ کام لیست پاشەکەوت بکەم؟", view=view, ephemeral=True)
+        await interaction.response.send_message("💾 بۆ کیژ لیستێ پاشەکەفت بکەم؟", view=view, ephemeral=True)
 
 # ═══════════════════════════════════════
-# بەشی ٤: ڕیزبەندی (پەڕە بە پەڕە)
+# بەشێ ٤: ڕیز (لاپەڕە ب لاپەڕە)
 # ═══════════════════════════════════════
 
 class QueueView(discord.ui.View):
@@ -494,20 +494,20 @@ class QueueView(discord.ui.View):
         desc = ""
         if st and st.current:
             t = st.current
-            desc += f"**🎧 ئێستا لێدەدرێت**\n[{trim(t.title, 60)}]({t.url}) ┃ `{t.duration_str}`\n\n"
+            desc += f"**🎧 نوکە دهێتە لێدان**\n[{trim(t.title, 60)}]({t.url}) ┃ `{t.duration_str}`\n\n"
         if queue:
             start = self.page * QUEUE_PER_PAGE
             lines = [
                 f"`{start + i:02d}` [{trim(t.title, 55)}]({t.url}) ┃ `{t.duration_str}`"
                 for i, t in enumerate(queue[start:start + QUEUE_PER_PAGE], start=1)
             ]
-            desc += "**📋 داهاتوو**\n" + "\n".join(lines)
+            desc += "**📋 یێ ل دویف**\n" + "\n".join(lines)
         else:
-            desc += "*ڕیزبەندی بەتاڵە. بنووسە* `" + PREFIX + " play <ناو>`"
+            desc += "*ڕیز ڤالایە. بنڤیسە* `" + PREFIX + " play <ناڤ>`"
 
         total = sum(t.duration for t in queue)
-        embed = make_embed("📜 ڕیزبەندی میوزیک", desc, color=PURPLE)
-        embed.set_footer(text=f"پەڕە {self.page + 1}/{pages} • {len(queue)} گۆرانی • {fmt_time(total)} • {BOT_NAME}")
+        embed = make_embed("📜 ڕیزا میوزیکێ", desc, color=PURPLE)
+        embed.set_footer(text=f"لاپەڕە {self.page + 1}/{pages} • {len(queue)} گۆرانی • {fmt_time(total)} • {BOT_NAME}")
         return embed
 
     @discord.ui.button(emoji="◀️", style=discord.ButtonStyle.secondary)
@@ -521,7 +521,7 @@ class QueueView(discord.ui.View):
         await interaction.response.edit_message(embed=self.build(), view=self)
 
 # ═══════════════════════════════════════
-# بەشی ٥: داشبۆردی هونەرمەندان (z menu)
+# بەشێ ٥: داشبۆردا هونەرمەندان (z menu)
 # ═══════════════════════════════════════
 
 class SongSelect(discord.ui.Select):
@@ -532,14 +532,14 @@ class SongSelect(discord.ui.Select):
             discord.SelectOption(label=s["label"][:100], value=s["query"], description=s["desc"][:100], emoji="🎵")
             for s in artist["songs"]
         ]
-        super().__init__(placeholder=f"🎧 گۆرانییەکی {artist['name']} هەڵبژێرە...", options=options)
+        super().__init__(placeholder=f"🎧 گۆرانیەکا {artist['name']} هەلبژێرە...", options=options)
 
     async def callback(self, interaction):
         voice = getattr(interaction.user, "voice", None)
         if not voice or not voice.channel:
-            return await interaction.response.send_message("❌ سەرەتا بچۆ ناو ڤۆیسێک.", ephemeral=True)
+            return await interaction.response.send_message("❌ سەرەتا بچە ناڤ ڤۆیسەکێ.", ephemeral=True)
         query = self.values[0]
-        await interaction.response.send_message(f"⚡ داواکرا: `{query}`", ephemeral=True)
+        await interaction.response.send_message(f"⚡ هاتە داخوازکرن: `{query}`", ephemeral=True)
         await self.cog.request(interaction.guild, interaction.channel, interaction.user, query)
 
 class SongView(discord.ui.View):
@@ -554,7 +554,7 @@ class ArtistSelect(discord.ui.Select):
             discord.SelectOption(label=d["name"], value=k, description=d["description"][:100], emoji="🎙️")
             for k, d in ARTISTS_DATA.items()
         ]
-        super().__init__(placeholder="✨ هونەرمەندێک هەڵبژێرە...", options=options)
+        super().__init__(placeholder="✨ هونەرمەندەکێ هەلبژێرە...", options=options)
 
     async def callback(self, interaction):
         key = self.values[0]
@@ -579,8 +579,8 @@ class ArtistView(discord.ui.View):
                 pass
 
 # ═══════════════════════════════════════
-# بەشی ٥ب: کتێبخانەی میوزیک ─ Favorites / Recently Played / Playlists
-# هەموو شتێک لە هەمان economy.db دا هەڵدەگیرێت (بۆیە backup ـەکەی بوتەکە دەیگرێتەوە)
+# بەشێ ٥ب: کتێبخانەیا میوزیکێ ─ Favorites / Recently Played / Playlists
+# هەمی تشت ل هەمان economy.db دا دهێنە هەلگرتن (ژ بەر هندێ backupا بوتی دێ وان بگریت)
 # ═══════════════════════════════════════
 
 db.execute(
@@ -638,7 +638,7 @@ def lib_fav_id(user_id):
     db.commit()
     return cur.lastrowid
 
-# لیستەکانی کەسێک (بێ Favorites): (id, name, ژمارەی گۆرانی)
+# لیستێن کەسەکی (بێ Favorites): (id, name, ژمارا گۆرانیان)
 def lib_custom(user_id):
     return db.execute(
         "SELECT p.id, p.name, (SELECT COUNT(*) FROM music_playlist_tracks t WHERE t.playlist_id = p.id) "
@@ -652,7 +652,7 @@ def lib_count(playlist_id):
 def lib_recent_count(user_id):
     return db.execute("SELECT COUNT(*) FROM music_recent WHERE user_id = ?", (user_id,)).fetchone()[0]
 
-# ناو یان ژمارە دەکات بە LibRef: fav / recent / ژمارەی لیست (وەک لە داشبۆرد) / ناوی لیست
+# ناڤ یان ژمارێ دکەتە LibRef: fav / recent / ژمارا لیستێ (وەک ل داشبۆردێ) / ناڤێ لیستێ
 def lib_resolve(user_id, text):
     t = " ".join(text.split()).lower()
     if t in FAV_WORDS:
@@ -668,7 +668,7 @@ def lib_resolve(user_id, text):
             return LibRef("playlist", pid, name, user_id)
     return None
 
-# گۆرانییەکانی لیستێک: (title, url, duration, uploader, thumbnail)
+# گۆرانیێن لیستەکێ: (title, url, duration, uploader, thumbnail)
 def lib_tracks(ref):
     if ref.kind == "recent":
         return db.execute(
@@ -678,7 +678,7 @@ def lib_tracks(ref):
         "SELECT title, url, duration, uploader, thumbnail FROM music_playlist_tracks "
         "WHERE playlist_id = ? ORDER BY id", (ref.id,)).fetchall()
 
-# دەگەڕێنێتەوە: ok / exists / full
+# دزڤڕینیتەڤە: ok / exists / full
 def lib_add(playlist_id, track):
     if db.execute("SELECT 1 FROM music_playlist_tracks WHERE playlist_id = ? AND url = ?",
                   (playlist_id, track.url)).fetchone():
@@ -693,7 +693,7 @@ def lib_add(playlist_id, track):
     db.commit()
     return "ok"
 
-# دەگەڕێنێتەوە: added / removed / full
+# دزڤڕینیتەڤە: added / removed / full
 def lib_toggle_fav(user_id, track):
     pid = lib_fav_id(user_id)
     row = db.execute("SELECT id FROM music_playlist_tracks WHERE playlist_id = ? AND url = ?",
@@ -704,7 +704,7 @@ def lib_toggle_fav(user_id, track):
         return "removed"
     return "added" if lib_add(pid, track) == "ok" else "full"
 
-# ژمارە (١ بۆ سەرەوە) دەگەڕێنێتەوە ناوی گۆرانی لابراو، یان None
+# ژمارێ (١ ژ سەرەڤە) ناڤێ گۆرانیا لابری دزڤڕینیتەڤە، یان None
 def lib_remove_track(playlist_id, number):
     ids = [r[0] for r in db.execute(
         "SELECT id FROM music_playlist_tracks WHERE playlist_id = ? ORDER BY id", (playlist_id,)).fetchall()]
@@ -715,7 +715,7 @@ def lib_remove_track(playlist_id, number):
     db.commit()
     return title or "Unknown"
 
-# دەگەڕێنێتەوە: ok / invalid / reserved / limit / exists
+# دزڤڕینیتەڤە: ok / invalid / reserved / limit / exists
 def lib_create(user_id, name):
     name = " ".join(str(name).split())[:MAX_PLAYLIST_NAME]
     if not name:
@@ -737,7 +737,7 @@ def lib_delete(playlist_id):
     db.execute("DELETE FROM music_playlists WHERE id = ? AND is_fav = 0", (playlist_id,))
     db.commit()
 
-# هەر گۆرانییەک دەست بە لێدان بکات، بۆ داواکارەکەی تۆمار دەکرێت (هەڵەی داتابەیس هەرگیز میوزیک ناوەستێنێت)
+# هەر گۆرانیەک دەست ب لێدانێ بکەت، بۆ داخوازکەرێ وێ دهێتە تۆمارکرن (خەلەتیا داتابەیسێ چ جاران میوزیکێ ڕاناوەستینیت)
 def record_recent(user_id, track):
     try:
         db.execute("DELETE FROM music_recent WHERE user_id = ? AND url = ?", (user_id, track.url))
@@ -753,7 +753,7 @@ def record_recent(user_id, track):
         )
         db.commit()
     except Exception as e:
-        print(f"هەڵەی Recently Played: {e}")
+        print(f"خەلەتیا Recently Played: {e}")
 
 def row_to_track(row, requester):
     title, url, duration, uploader, thumbnail = row
@@ -761,18 +761,18 @@ def row_to_track(row, requester):
                  thumbnail=thumbnail, uploader=uploader or "—", requester=requester)
 
 CREATE_ERRORS = {
-    "invalid": "ناوی لیست بەتاڵە.",
-    "reserved": "ئەم ناوە تایبەتە (Favorites / Recent). ناوێکی تر هەڵبژێرە.",
-    "limit": f"زۆرترین **{MAX_PLAYLISTS}** لیست دەتوانیت هەبێت.",
-    "exists": "ئەم ناوە پێشتر هەیە.",
+    "invalid": "ناڤێ لیستێ ڤالایە.",
+    "reserved": "ئەڤ ناڤە تایبەتە (Favorites / Recent). ناڤەکێ دی هەلبژێرە.",
+    "limit": f"تو دشێی زۆرترین **{MAX_PLAYLISTS}** لیستان هەبیت.",
+    "exists": "ئەڤ ناڤە بەری نوکە هەیە.",
 }
 ADD_TEXT = {
-    "ok": "✅ زیاد کرا بۆ لیستەکە.",
-    "exists": "⚠️ ئەم گۆرانییە پێشتر لەو لیستەدایە.",
-    "full": f"❌ ئەو لیستە پڕە (**{MAX_PLAYLIST_TRACKS}** گۆرانی).",
+    "ok": "✅ هاتە زێدەکرن بۆ لیستێ.",
+    "exists": "⚠️ ئەڤ گۆرانی بەری نوکە د وی لیستێ دایە.",
+    "full": f"❌ ئەو لیست تژییە (**{MAX_PLAYLIST_TRACKS}** گۆرانی).",
 }
 
-# ─── پاشەکەوتکردنی گۆرانی ئێستا لە پلەیەر (💾) ───
+# ─── پاشەکەفتکرنا گۆرانیا نوکە ژ پلەیەرێ (💾) ───
 
 class SaveSelect(discord.ui.Select):
     def __init__(self, track, pls):
@@ -781,17 +781,17 @@ class SaveSelect(discord.ui.Select):
             discord.SelectOption(label=name[:100], value=str(pid), description=f"{cnt} گۆرانی", emoji="🎼")
             for pid, name, cnt in pls
         ]
-        super().__init__(placeholder="🎼 لیستێک هەڵبژێرە...", options=options)
+        super().__init__(placeholder="🎼 لیستەکێ هەلبژێرە...", options=options)
 
     async def callback(self, interaction):
         pid = int(self.values[0])
         owned = db.execute("SELECT 1 FROM music_playlists WHERE id = ? AND user_id = ? AND is_fav = 0",
                            (pid, interaction.user.id)).fetchone()
         if not owned:
-            return await interaction.response.edit_message(content="❌ ئەم لیستە ئیتر نییە.", view=None)
+            return await interaction.response.edit_message(content="❌ ئەڤ لیست ئی نینە.", view=None)
         await interaction.response.edit_message(content=ADD_TEXT[lib_add(pid, self.track)], view=None)
 
-# ─── لیستی گۆرانییەکان (Favorites / Recent / Playlist) ───
+# ─── لیستا گۆرانیان (Favorites / Recent / Playlist) ───
 
 class LibTrackSelect(discord.ui.Select):
     def __init__(self, lv, chunk, start):
@@ -805,7 +805,7 @@ class LibTrackSelect(discord.ui.Select):
             )
             for i, r in enumerate(chunk, start=1)
         ]
-        super().__init__(placeholder="🎧 گۆرانییەک هەڵبژێرە و لێیبدە...", options=options, row=1)
+        super().__init__(placeholder="🎧 گۆرانیەکێ هەلبژێرە و لێدە...", options=options, row=1)
 
     async def callback(self, interaction):
         cog = self.lv.cog
@@ -814,7 +814,7 @@ class LibTrackSelect(discord.ui.Select):
         rows = lib_tracks(self.lv.ref)
         idx = int(self.values[0])
         if idx >= len(rows):
-            return await interaction.response.send_message("❌ ئەم گۆرانییە ئیتر لەم لیستەدا نییە.", ephemeral=True)
+            return await interaction.response.send_message("❌ ئەڤ گۆرانی ئی د ڤێ لیستێ دا نینە.", ephemeral=True)
         await interaction.response.defer()
         await cog.enqueue_saved(interaction.guild, interaction.channel, interaction.user,
                                 [rows[idx]], label=trim(rows[idx][0] or "", 60))
@@ -831,11 +831,11 @@ class ListView(discord.ui.View):
         if not dashboard:
             self.remove_item(self.home_btn)
 
-    # تەنها خاوەنی لیستەکە دەتوانێت بەکاری بهێنێت
+    # تەنێ خودانێ لیستێ دشێت بکاربینیت
     async def interaction_check(self, interaction):
         if interaction.user.id != self.owner.id:
             await interaction.response.send_message(
-                f"❌ ئەم لیستە هی **{self.owner.display_name}**ـە. بۆ خۆت بنووسە `{PREFIX} playlist`.", ephemeral=True)
+                f"❌ ئەڤ لیستە یا **{self.owner.display_name}**ە. بۆ خوە بنڤیسە `{PREFIX} playlist`.", ephemeral=True)
             return False
         return True
 
@@ -870,16 +870,16 @@ class ListView(discord.ui.View):
                 for i, r in enumerate(chunk, start=1)
             )
         elif self.ref.kind == "fav":
-            desc = f"*هێشتا هیچ Favorite ـێکت نییە.*\nکاتێک گۆرانییەک لێدەدرێت ❤️ دابگرە، یان `{PREFIX} like` بنووسە."
+            desc = f"*هێشتا چ Favoriteەکێ تە نینە.*\nدەمێ گۆرانیەک دهێتە لێدان ❤️ بگوشە، یان `{PREFIX} like` بنڤیسە."
         elif self.ref.kind == "recent":
-            desc = "*هێشتا هیچ گۆرانییەکت لێنەداوە.*"
+            desc = "*هێشتا چ گۆرانیەک ژ تە نەهاتیە لێدان.*"
         else:
-            desc = f"*ئەم لیستە بەتاڵە.*\nگۆرانییەک لێبدە و 💾 دابگرە، یان `{PREFIX} pl add {self.ref.name}` بنووسە."
+            desc = f"*ئەڤ لیستە ڤالایە.*\nگۆرانیەکێ لێدە و 💾 بگوشە، یان `{PREFIX} pl add {self.ref.name}` بنڤیسە."
 
         total = sum((r[2] or 0) for r in rows)
         embed = make_embed(self.ref.title, desc, color=PURPLE)
         embed.set_author(name=self.owner.display_name, icon_url=self.owner.display_avatar.url)
-        embed.set_footer(text=f"پەڕە {self.page + 1}/{pages} • {len(rows)} گۆرانی • {fmt_time(total)} • {BOT_NAME}")
+        embed.set_footer(text=f"لاپەڕە {self.page + 1}/{pages} • {len(rows)} گۆرانی • {fmt_time(total)} • {BOT_NAME}")
         return embed
 
     @discord.ui.button(emoji="◀️", style=discord.ButtonStyle.secondary, row=0)
@@ -892,7 +892,7 @@ class ListView(discord.ui.View):
         self.page += 1
         await interaction.response.edit_message(embed=self.build(), view=self)
 
-    @discord.ui.button(emoji="🎶", label="هەمووی لێبدە", style=discord.ButtonStyle.success, row=0)
+    @discord.ui.button(emoji="🎶", label="هەمیان لێدە", style=discord.ButtonStyle.success, row=0)
     async def play_btn(self, interaction, button):
         if not await self.cog.ensure_voice(interaction):
             return
@@ -900,7 +900,7 @@ class ListView(discord.ui.View):
         await self.cog.enqueue_saved(interaction.guild, interaction.channel, interaction.user,
                                      lib_tracks(self.ref), label=self.ref.title)
 
-    @discord.ui.button(emoji="🔀", label="تێکەڵ", style=discord.ButtonStyle.primary, row=0)
+    @discord.ui.button(emoji="🔀", label="تێکەل", style=discord.ButtonStyle.primary, row=0)
     async def shuffle_btn(self, interaction, button):
         if not await self.cog.ensure_voice(interaction):
             return
@@ -914,10 +914,10 @@ class ListView(discord.ui.View):
         dash.message = interaction.message
         await interaction.response.edit_message(embed=dash.build(), view=dash)
 
-# ─── داشبۆردی کتێبخانە (z playlist) ───
+# ─── داشبۆردا کتێبخانێ (z playlist) ───
 
-class CreateModal(discord.ui.Modal, title="🎼 لیستی نوێ"):
-    name = discord.ui.TextInput(label="ناوی لیست", placeholder="بۆ نموونە: Chill", max_length=MAX_PLAYLIST_NAME)
+class CreateModal(discord.ui.Modal, title="🎼 لیستەکا نوی"):
+    name = discord.ui.TextInput(label="ناڤێ لیستێ", placeholder="بۆ نموونە: Chill", max_length=MAX_PLAYLIST_NAME)
 
     def __init__(self, cog, owner):
         super().__init__()
@@ -944,7 +944,7 @@ class LibrarySelect(discord.ui.Select):
         for pid, name, cnt in lib_custom(owner.id):
             options.append(discord.SelectOption(label=name[:100], value=f"pl:{pid}", emoji="🎼",
                                                 description=f"{cnt} گۆرانی"))
-        super().__init__(placeholder="📂 لیستێک هەڵبژێرە...", options=options, row=0)
+        super().__init__(placeholder="📂 لیستەکێ هەلبژێرە...", options=options, row=0)
 
     async def callback(self, interaction):
         value = self.values[0]
@@ -957,7 +957,7 @@ class LibrarySelect(discord.ui.Select):
             pid = int(value.split(":")[1])
             row = next((p for p in lib_custom(uid) if p[0] == pid), None)
             if row is None:
-                return await interaction.response.send_message("❌ ئەم لیستە ئیتر نییە.", ephemeral=True)
+                return await interaction.response.send_message("❌ ئەڤ لیستە ئی نینە.", ephemeral=True)
             ref = LibRef("playlist", pid, row[1], uid)
         view = ListView(self.view.cog, self.owner, ref, dashboard=True)
         view.message = interaction.message
@@ -974,7 +974,7 @@ class DashboardView(discord.ui.View):
     async def interaction_check(self, interaction):
         if interaction.user.id != self.owner.id:
             await interaction.response.send_message(
-                f"❌ ئەم کتێبخانەیە هی **{self.owner.display_name}**ـە. بۆ خۆت بنووسە `{PREFIX} playlist`.", ephemeral=True)
+                f"❌ ئەڤ کتێبخانە یا **{self.owner.display_name}**ە. بۆ خوە بنڤیسە `{PREFIX} playlist`.", ephemeral=True)
             return False
         return True
 
@@ -1001,27 +1001,27 @@ class DashboardView(discord.ui.View):
                 for n, (pid, name, cnt) in enumerate(pls, start=1)
             )
         else:
-            desc += "*هێشتا هیچ لیستێکت نییە. دوگمەی ➕ دابگرە.*"
+            desc += "*هێشتا چ لیستێن تە نینن. دوگمەیا ➕ بگوشە.*"
         desc += f"\n\n💡 `{PREFIX} like` ┃ `{PREFIX} pl play <ناو>` ┃ `{PREFIX} recent`"
-        embed = make_embed("🎧 کتێبخانەی میوزیکی تۆ", desc, color=PURPLE)
+        embed = make_embed("🎧 کتێبخانەیا میوزیکێ یا تە", desc, color=PURPLE)
         embed.set_author(name=self.owner.display_name, icon_url=self.owner.display_avatar.url)
         embed.set_thumbnail(url=self.owner.display_avatar.url)
         embed.set_footer(text=f"{len(pls)}/{MAX_PLAYLISTS} لیست • {BOT_NAME} Music")
         return embed
 
-    @discord.ui.button(emoji="➕", label="لیستی نوێ", style=discord.ButtonStyle.primary, row=1)
+    @discord.ui.button(emoji="➕", label="لیستەکا نوی", style=discord.ButtonStyle.primary, row=1)
     async def create_btn(self, interaction, button):
         await interaction.response.send_modal(CreateModal(self.cog, self.owner))
 
 # ═══════════════════════════════════════
-# بەشی ٦: Cog ی سەرەکی
+# بەشێ ٦: Cogا سەرەکی
 # ═══════════════════════════════════════
 
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.states = {}
-        # فایلە پاشماوەکانی جاری پێشوو بسڕەوە
+        # ئەو فایلێن ژ جارا بەری مایین ژێببە
         for name in os.listdir(DOWNLOAD_DIR):
             try:
                 os.remove(os.path.join(DOWNLOAD_DIR, name))
@@ -1038,7 +1038,7 @@ class Music(commands.Cog):
             if guild.id in self.states or guild.voice_client:
                 await self.destroy(guild)
 
-    # ─── یارمەتیدەرەکان ───
+    # ─── هاریکار ───
 
     def state(self, guild_id):
         if guild_id not in self.states:
@@ -1084,7 +1084,7 @@ class Music(commands.Cog):
             st.skipped = True
             vc.stop()
 
-    # ⏮️ ئەگەر زیاتر لە ٥ چرکە لێدرابێت، هەمان گۆرانی لە سەرەتاوە. ئەگەر نا، گۆرانی پێشوو
+    # ⏮️ ئەگەر پتر ژ ٥ چرکەیان هاتبیتە لێدان، هەمان گۆرانی ژ دەستپێکێ. ئەگەر نە، گۆرانیا بەری نوکە
     def do_previous(self, guild):
         st = self.states.get(guild.id)
         vc = guild.voice_client
@@ -1100,7 +1100,7 @@ class Music(commands.Cog):
             st.skipped = True
         vc.stop()
 
-    # 🎯 ڕاستەوخۆ بچۆ سەر گۆرانییەک لە ڕیزبەندی
+    # 🎯 ڕاستەخۆ بچە سەر گۆرانیەکێ ل ڕیزێ
     def do_jump(self, guild, track):
         st = self.states.get(guild.id)
         vc = guild.voice_client
@@ -1111,7 +1111,7 @@ class Music(commands.Cog):
         st.skipped = True
         vc.stop()
 
-    # ⏪ / ⏩ / z seek: هەمان گۆرانی لە چرکەیەکی تر دەست پێ دەکاتەوە
+    # ⏪ / ⏩ / z seek: هەمان گۆرانی ژ چرکەیەکا دی دەست پێ دکەتەڤە
     def do_seek(self, guild, position):
         st = self.states.get(guild.id)
         vc = guild.voice_client
@@ -1123,31 +1123,31 @@ class Music(commands.Cog):
         vc.stop()
         return True
 
-    # ─── گۆرانی پاشەکەوتکراو (لیست / Favorites / Recent) ───
+    # ─── گۆرانیا پاشەکەفتکری (لیست / Favorites / Recent) ───
 
     async def ensure_voice(self, interaction):
         voice = getattr(interaction.user, "voice", None)
         if not voice or not voice.channel:
-            await interaction.response.send_message("❌ سەرەتا بچۆ ناو ڤۆیسێک.", ephemeral=True)
+            await interaction.response.send_message("❌ سەرەتا بچە ناڤ ڤۆیسەکێ.", ephemeral=True)
             return False
         return True
 
-    # rows = (title, url, duration, uploader, thumbnail). گۆرانییەکان دەخاتە ڕیزبەندی و ئەگەر هیچ نەلێدرا، دەست پێ دەکات
+    # rows = (title, url, duration, uploader, thumbnail). گۆرانیان دکەتە ڕیزێ و ئەگەر چ نەهاتبیتە لێدان، دەست پێ دکەت
     async def enqueue_saved(self, guild, channel, member, rows, shuffle=False, label=None):
         rows = list(rows)
         if not rows:
-            return await channel.send(embed=warn_embed("ئەم لیستە بەتاڵە."))
+            return await channel.send(embed=warn_embed("ئەڤ لیستە ڤالایە."))
         voice = member.voice.channel if member.voice else None
         if voice is None:
-            return await channel.send(embed=error_embed(f"**{member.display_name}**، سەرەتا بچۆ ناو ڤۆیسێک."))
+            return await channel.send(embed=error_embed(f"**{member.display_name}**، سەرەتا بچە ناڤ ڤۆیسەکێ."))
         vc = guild.voice_client
         if vc and vc.channel != voice:
-            return await channel.send(embed=error_embed(f"بوت لە {vc.channel.mention} دایە. بچۆ ئەوێ یان `{PREFIX} stop` بنووسە."))
+            return await channel.send(embed=error_embed(f"بوت ل {vc.channel.mention} دایە. بچە وێرێ یان `{PREFIX} stop` بنڤیسە."))
 
         st = self.state(guild.id)
         room = MAX_QUEUE - len(st.queue) + (1 if st.current is None else 0)
         if room <= 0:
-            return await channel.send(embed=warn_embed(f"ڕیزبەندی پڕە (**{MAX_QUEUE}** گۆرانی)."))
+            return await channel.send(embed=warn_embed(f"ڕیز تژییە (**{MAX_QUEUE}** گۆرانی)."))
         if shuffle:
             random.shuffle(rows)
         cut = len(rows) > room
@@ -1157,7 +1157,7 @@ class Music(commands.Cog):
             try:
                 await voice.connect(reconnect=True, self_deaf=True)
             except Exception as e:
-                return await channel.send(embed=error_embed(f"نەتوانرا بچمە ناو ڤۆیس.\n`{trim(e, 150)}`"))
+                return await channel.send(embed=error_embed(f"نەشیام بچمە ناڤ ڤۆیسێ.\n`{trim(e, 150)}`"))
 
         self._cancel(st.idle_task)
         st.channel = channel
@@ -1171,15 +1171,15 @@ class Music(commands.Cog):
 
         text = f"**{discord.utils.escape_markdown(label or 'لیست')}** ─ `{len(tracks)}` گۆرانی"
         if cut:
-            text += f"\n⚠️ تەنها {len(tracks)} گۆرانی جێی بووەوە (سنووری ڕیزبەندی)."
-        embed = ok_embed("🔀 تێکەڵ کرا و زیاد کرا" if shuffle else "➕ زیاد کرا بۆ ڕیزبەندی", text)
-        embed.set_footer(text=f"داواکراوە لەلایەن {member.display_name} • {BOT_NAME} Music",
+            text += f"\n⚠️ تەنێ {len(tracks)} گۆرانی جهێ وان هەبوو (سنوورێ ڕیزێ)."
+        embed = ok_embed("🔀 هاتە تێکەلکرن و زێدەکرن" if shuffle else "➕ هاتە زێدەکرن بۆ ڕیزێ", text)
+        embed.set_footer(text=f"ژ لایێ {member.display_name} ڤە هاتیە داخوازکرن • {BOT_NAME} Music",
                          icon_url=member.display_avatar.url)
         await channel.send(embed=embed)
         if idle:
             await self.start_track(guild, tracks[0])
 
-    # ─── کارتی "ئێستا لێدەدرێت" ───
+    # ─── کارتا "نوکە دهێتە لێدان" ───
 
     def now_embed(self, guild, st):
         t = st.current
@@ -1195,21 +1195,21 @@ class Music(commands.Cog):
             f"{'⏸️' if paused else '▶️'}  `{fmt_time(elapsed)}`  "
             f"{progress_bar(elapsed, t.duration)}  `{t.duration_str}`\n\n"
             f"🔊 {volume_bar(st.volume)} `{int(st.volume * 100)}%`  ┃  {LOOP_TEXT[st.loop] if st.loop != 'off' else '🔁 ناچالاک'}"
-            f"  ┃  📋 `{len(st.queue)}` لە ڕیزبەندیدا"
+            f"  ┃  📋 `{len(st.queue)}` د ڕیزێ دا"
         )
         if st.queue:
             lines = [
                 f"`{n}` {trim(q.title, 48)} ┃ `{q.duration_str}`"
                 for n, q in enumerate(st.queue[:UPNEXT_SHOWN], start=1)
             ]
-            desc += "\n\n**⏭️ داهاتوو**\n" + "\n".join(lines)
+            desc += "\n\n**⏭️ یێ ل دویف**\n" + "\n".join(lines)
             if len(st.queue) > UPNEXT_SHOWN:
-                desc += f"\n*و {len(st.queue) - UPNEXT_SHOWN} گۆرانی تر...*"
+                desc += f"\n*و {len(st.queue) - UPNEXT_SHOWN} گۆرانیێن دی...*"
 
         embed = make_embed("", desc, color=GOLD if paused else PURPLE)
         embed.title = None
         embed.set_author(
-            name="وەستێنراوە • Paused" if paused else "ئێستا لێدەدرێت • Now Playing",
+            name="ڕاوەستیایە • Paused" if paused else "نوکە دهێتە لێدان • Now Playing",
             icon_url=self.bot.user.display_avatar.url,
         )
         if t.thumbnail:
@@ -1218,7 +1218,7 @@ class Music(commands.Cog):
             else:
                 embed.set_thumbnail(url=t.thumbnail)
         embed.set_footer(
-            text=f"داواکراوە لەلایەن {t.requester.display_name} • {BOT_NAME} Music",
+            text=f"ژ لایێ {t.requester.display_name} ڤە هاتیە داخوازکرن • {BOT_NAME} Music",
             icon_url=t.requester.display_avatar.url,
         )
         return embed
@@ -1234,7 +1234,7 @@ class Music(commands.Cog):
         except discord.HTTPException:
             pass
 
-    # کارتی "ئێستا لێدەدرێت" دەکات بە کارتێکی کورت (کاتێک گۆرانییەکە تەواو دەبێت)
+    # کارتا "نوکە دهێتە لێدان" دکەتە کارتەکا کورت (دەمێ گۆرانی تەمام دبیت)
     async def finish_message(self, st, track, stopped=False):
         self._cancel(st.progress_task)
         msg = st.message
@@ -1243,11 +1243,11 @@ class Music(commands.Cog):
         if not msg or not track:
             return
         if stopped:
-            title = "⏹️ لێدان ڕاگیرا"
+            title = "⏹️ لێدان ڕاوەستیا"
         elif st.skipped:
-            title = "⏭️ پەڕێندرا"
+            title = "⏭️ هاتە پەڕاندن"
         else:
-            title = "✅ لێدان تەواو بوو"
+            title = "✅ لێدان تەمام بوو"
         embed = make_embed(
             title,
             f"[{trim(track.title, 80)}]({track.url}) ┃ `{track.duration_str}`",
@@ -1264,32 +1264,32 @@ class Music(commands.Cog):
     async def request(self, guild, channel, member, query):
         voice = member.voice.channel if member.voice else None
         if voice is None:
-            return await channel.send(embed=error_embed(f"**{member.display_name}**، سەرەتا بچۆ ناو ڤۆیسێک."))
+            return await channel.send(embed=error_embed(f"**{member.display_name}**، سەرەتا بچە ناڤ ڤۆیسەکێ."))
         vc = guild.voice_client
         if vc and vc.channel != voice:
-            return await channel.send(embed=error_embed(f"بوت لە {vc.channel.mention} دایە. بچۆ ئەوێ یان `{PREFIX} stop` بنووسە."))
+            return await channel.send(embed=error_embed(f"بوت ل {vc.channel.mention} دایە. بچە وێرێ یان `{PREFIX} stop` بنڤیسە."))
 
         st = self.state(guild.id)
         if len(st.queue) >= MAX_QUEUE:
-            return await channel.send(embed=warn_embed(f"ڕیزبەندی پڕە (**{MAX_QUEUE}** گۆرانی)."))
+            return await channel.send(embed=warn_embed(f"ڕیز تژییە (**{MAX_QUEUE}** گۆرانی)."))
 
-        status = await channel.send(embed=ok_embed("🔎 گەڕان...", f"`{trim(query, 100)}`"))
+        status = await channel.send(embed=ok_embed("🔎 گەڕیان...", f"`{trim(query, 100)}`"))
         try:
             data, _ = await self.bot.loop.run_in_executor(None, _extract, query, False)
         except Exception as e:
-            return await status.edit(embed=error_embed(f"گۆرانییەکە نەدۆزرایەوە.\n`{trim(e, 150)}`"))
+            return await status.edit(embed=error_embed(f"گۆرانی نەهاتە دیتن.\n`{trim(e, 150)}`"))
 
         track = make_track(data, member)
         if track.is_live:
-            return await status.edit(embed=warn_embed("لایڤ (Live) پشتگیری ناکرێت."))
+            return await status.edit(embed=warn_embed("لایڤ (Live) پشتگیری ناهێتە کرن."))
         if MAX_SONG_MINUTES and track.duration > MAX_SONG_MINUTES * 60:
-            return await status.edit(embed=warn_embed(f"گۆرانییەکە زۆر درێژە. زۆرترین ماوە **{MAX_SONG_MINUTES} خولەک**ـە."))
+            return await status.edit(embed=warn_embed(f"گۆرانی گەلەک درێژە. زۆرترین دەم **{MAX_SONG_MINUTES} خولەکە**."))
 
         if guild.voice_client is None:
             try:
                 await voice.connect(reconnect=True, self_deaf=True)
             except Exception as e:
-                return await status.edit(embed=error_embed(f"نەتوانرا بچمە ناو ڤۆیس.\n`{trim(e, 150)}`"))
+                return await status.edit(embed=error_embed(f"نەشیام بچمە ناڤ ڤۆیسێ.\n`{trim(e, 150)}`"))
 
         self._cancel(st.idle_task)
         st.channel = channel
@@ -1312,14 +1312,14 @@ class Music(commands.Cog):
             await self.start_track(guild, track)
             return
 
-        embed = ok_embed("➕ زیاد کرا بۆ ڕیزبەندی", f"[{trim(track.title, 100)}]({track.url})")
+        embed = ok_embed("➕ هاتە زێدەکرن بۆ ڕیزێ", f"[{trim(track.title, 100)}]({track.url})")
         if track.thumbnail:
             embed.set_thumbnail(url=track.thumbnail)
-        embed.add_field(name="⏱️ ماوە", value=f"`{track.duration_str}`")
-        embed.add_field(name="📍 شوێن", value=f"`#{position}`")
-        embed.add_field(name="⏳ چاوەڕوانی", value=f"`~{fmt_time(wait)}`")
+        embed.add_field(name="⏱️ دەم", value=f"`{track.duration_str}`")
+        embed.add_field(name="📍 جه", value=f"`#{position}`")
+        embed.add_field(name="⏳ چاڤەڕێکرن", value=f"`~{fmt_time(wait)}`")
         embed.set_footer(
-            text=f"داواکراوە لەلایەن {member.display_name} • {BOT_NAME} Music",
+            text=f"ژ لایێ {member.display_name} ڤە هاتیە داخوازکرن • {BOT_NAME} Music",
             icon_url=member.display_avatar.url,
         )
         await status.edit(embed=embed)
@@ -1335,20 +1335,20 @@ class Music(commands.Cog):
     def is_stream(self, track):
         return STREAM_OVER_MINUTES > 0 and track.duration > STREAM_OVER_MINUTES * 60
 
-    # st.current پێشتر دانراوە. ئەم فەرمانە دایدەبەزێنێت (یان stream دەکات) و دەستی پێ دەکات
+    # st.current بەری نوکە هاتیە دانان. ئەڤ فەرمانە دابەزینیت (یان stream دکەت) و دەستپێ دکەت
     async def start_track(self, guild, track, reuse=False, start_at=0):
         st = self.state(guild.id)
         path, data = None, None
         try:
             if self.is_stream(track):
-                # هەر جارێک لینکی نوێ وەردەگرین، چونکە لینکی YouTube دوای چەند کاتژمێرێک بەسەر دەچێت
+                # هەر جارەکێ لینکەکێ نوی وەردگرین، چونکی لینکێ YouTube پشتی چەند دەمژمێران بسەر دچیت
                 data, _ = await self.bot.loop.run_in_executor(None, _extract, track.url, False)
             else:
                 path = await self.download(track, guild.id)
         except Exception as e:
             st.current = None
             if st.channel:
-                await st.channel.send(embed=error_embed(f"نەتوانرا **{trim(track.title, 60)}** بارکرێت.\n`{trim(e, 150)}`"))
+                await st.channel.send(embed=error_embed(f"نەهاتە شیان **{trim(track.title, 60)}** بهێتە بارکرن.\n`{trim(e, 150)}`"))
             return await self.play_next(guild)
 
         vc = guild.voice_client
@@ -1358,7 +1358,7 @@ class Music(commands.Cog):
 
         def after(error):
             if error:
-                print(f"هەڵەی لێدان: {error}")
+                print(f"خەلەتیا لێدانێ: {error}")
             asyncio.run_coroutine_threadsafe(self._after(guild, track, error), self.bot.loop)
 
         try:
@@ -1371,7 +1371,7 @@ class Music(commands.Cog):
             st.current = None
             self.remove_file(track)
             if st.channel:
-                await st.channel.send(embed=error_embed(f"هەڵە لە لێدان.\n`{trim(e, 150)}`"))
+                await st.channel.send(embed=error_embed(f"خەلەتی د لێدانێ دا.\n`{trim(e, 150)}`"))
             return
 
         st.reset_clock()
@@ -1398,11 +1398,11 @@ class Music(commands.Cog):
         if st is None or st.current is not track:
             self.remove_file(track)
             return
-        # seek: هەمان گۆرانی لە شوێنی نوێوە دەست پێ دەکاتەوە (فایلەکە ناسڕدرێتەوە)
+        # seek: هەمان گۆرانی ژ جهەکێ نوی دەست پێ دکەتەڤە (فایل ناهێتە ژێبرن)
         if st.seek_to is not None:
             pos, st.seek_to = st.seek_to, None
             return await self.start_track(guild, track, reuse=True, start_at=pos)
-        # ئەگەر لە ناوەڕاستدا پچڕا (هەڵە یان stream ی پچڕاو)، لەو شوێنەوە بەردەوام دەبێت
+        # ئەگەر د ناڤەڕاستێ دا پچڕی (خەلەتی یان streamا پچڕایی)، ژ وی جهی بەردەوام دبیت
         if (error or self.is_stream(track)) and track.duration and not st.skipped and not st.restart and st.override is None:
             elapsed = st.elapsed()
             if track.duration - elapsed > 20:
@@ -1410,7 +1410,7 @@ class Music(commands.Cog):
                     track.retries += 1
                     return await self.start_track(guild, track, reuse=True, start_at=elapsed)
                 if st.channel:
-                    await st.channel.send(embed=warn_embed(f"لێدانی **{trim(track.title, 60)}** پچڕا و نەگەڕایەوە."))
+                    await st.channel.send(embed=warn_embed(f"لێدانا **{trim(track.title, 60)}** پچڕی و نەزڤڕییەڤە."))
         keep = bool((st.loop == "song" and not st.skipped) or st.restart)
         if not keep:
             self.remove_file(track)
@@ -1459,7 +1459,7 @@ class Music(commands.Cog):
         nxt.retries = 0
         await self.start_track(guild, nxt, reuse=reuse)
 
-    # شریتی کات نوێ دەکاتەوە
+    # شریتا دەمی نوی دکەتەڤە
     async def progress_loop(self, guild, track):
         try:
             while True:
@@ -1475,7 +1475,7 @@ class Music(commands.Cog):
         except (discord.HTTPException, asyncio.CancelledError):
             pass
 
-    # ─── دەرچوون و پاککردنەوە ───
+    # ─── دەرکەفتن و پاقژکرن ───
 
     async def _idle(self, guild):
         if STAY_IN_VOICE:
@@ -1491,7 +1491,7 @@ class Music(commands.Cog):
             await self.destroy(guild)
             if channel:
                 await channel.send(embed=make_embed(
-                    "👋 چوومە دەرەوە", f"بەهۆی بێ‌چالاکی {IDLE_DISCONNECT // 60} خولەک.", color=WARN))
+                    "👋 چوومە دەر", f"ژ بەر بێ چالاکیێ {IDLE_DISCONNECT // 60} خولەکان.", color=WARN))
 
     async def _alone(self, guild):
         if STAY_IN_VOICE:
@@ -1507,7 +1507,7 @@ class Music(commands.Cog):
             await self.destroy(guild)
             if channel:
                 await channel.send(embed=make_embed(
-                    "👋 چوومە دەرەوە", "هیچ کەسێک لە ڤۆیس نەما.", color=WARN))
+                    "👋 چوومە دەر", "چ کەس ل ڤۆیسێ نەما.", color=WARN))
         elif guild.id in self.states:
             self.states[guild.id].alone_task = None
 
@@ -1519,7 +1519,7 @@ class Music(commands.Cog):
             self._cancel(task)
         self.remove_file(st.current)
 
-    # بوت لە ڤۆیس دەردەچێت و هەموو شتێک پاک دەکاتەوە
+    # بوت ژ ڤۆیسێ دەردکەڤیت و هەمی تشتان پاقژ دکەت
     async def destroy(self, guild):
         st = self.states.get(guild.id)
         if st:
@@ -1554,35 +1554,35 @@ class Music(commands.Cog):
         elif before.channel == vc.channel and st.alone_task is None:
             st.alone_task = self.bot.loop.create_task(self._alone(guild))
 
-    # ─── پشکنینی فەرمانەکان ───
+    # ─── پشکنینا فەرمانان ───
 
     async def check(self, ctx, need_playing=True):
         vc = ctx.guild.voice_client
         st = self.states.get(ctx.guild.id)
         if not vc or not vc.is_connected():
-            await ctx.send(embed=error_embed("بوت لە ڤۆیس نییە."), delete_after=8)
+            await ctx.send(embed=error_embed("بوت ل ڤۆیسێ نینە."), delete_after=8)
             return None
         voice = ctx.author.voice
         if not voice or voice.channel != vc.channel:
-            await ctx.send(embed=error_embed("دەبێت لەگەڵ بوت لە هەمان ڤۆیس بیت."), delete_after=8)
+            await ctx.send(embed=error_embed("دڤێت دگەل بوتی ل هەمان ڤۆیسێ بی."), delete_after=8)
             return None
         if need_playing and (not st or not st.current):
-            await ctx.send(embed=error_embed("هیچ گۆرانییەک نالێدرێت."), delete_after=8)
+            await ctx.send(embed=error_embed("چ گۆرانی ناهێنە لێدان."), delete_after=8)
             return None
         return st, vc
 
     # ═══════════════════════════════════════
-    # بەشی ٧: فەرمانەکان
+    # بەشێ ٧: فەرمان
     # ═══════════════════════════════════════
 
-    # z play <ناو / لینک>
+    # z play <ناڤ / لینک>
     @commands.command(name="play", aliases=["p"])
     async def play(self, ctx, *, search: str = None):
         if not search:
             return await ctx.send(embed=ok_embed(
-                "🎶 چۆن لێبدەم؟",
-                f"`{PREFIX} play <ناوی گۆرانی یان لینکی YouTube/TikTok>`\n"
-                f"چەند گۆرانی بە یەکجار: هەر یەک لە دێڕێکدا.", ctx=ctx))
+                "🎶 چەوا لێدەم؟",
+                f"`{PREFIX} play <ناڤێ گۆرانیێ یان لینکێ YouTube/TikTok>`\n"
+                f"چەند گۆرانی ب جارەکێ: هەر یەک د دێڕەکێ دا.", ctx=ctx))
         queries = [q.strip() for q in search.split("\n") if q.strip()][:10]
         for q in queries:
             await self.request(ctx.guild, ctx.channel, ctx.author, q)
@@ -1592,16 +1592,16 @@ class Music(commands.Cog):
     async def join(self, ctx):
         voice = ctx.author.voice
         if not voice or not voice.channel:
-            return await ctx.send(embed=error_embed("سەرەتا بچۆ ناو ڤۆیسێک."), delete_after=8)
+            return await ctx.send(embed=error_embed("سەرەتا بچە ناڤ ڤۆیسەکێ."), delete_after=8)
         vc = ctx.guild.voice_client
         if vc and vc.channel == voice.channel:
-            return await ctx.send(embed=warn_embed("بوت پێشتر لێرەیە."), delete_after=8)
+            return await ctx.send(embed=warn_embed("بوت بەری نوکە ل ڤێرەیە."), delete_after=8)
         if vc:
             await vc.move_to(voice.channel)
         else:
             await voice.channel.connect(reconnect=True, self_deaf=True)
         self.state(ctx.guild.id).channel = ctx.channel
-        await ctx.send(embed=ok_embed("🔊 هاتمە ناو ڤۆیس", f"{voice.channel.mention}\nبنووسە `{PREFIX} play <ناو>`", ctx=ctx))
+        await ctx.send(embed=ok_embed("🔊 ئەز هاتمە ناڤ ڤۆیسێ", f"{voice.channel.mention}\nبنڤیسە `{PREFIX} play <ناڤ>`", ctx=ctx))
 
     # z pause / z resume
     @commands.command(name="pause")
@@ -1611,7 +1611,7 @@ class Music(commands.Cog):
             return
         st, vc = res
         if vc.is_paused():
-            return await ctx.send(embed=warn_embed("پێشتر وەستێنراوە."), delete_after=8)
+            return await ctx.send(embed=warn_embed("بەری نوکە ڕاوەستیایە."), delete_after=8)
         self.toggle_pause(st, vc)
         await self.refresh_message(ctx.guild)
         await ctx.message.add_reaction("⏸️")
@@ -1623,7 +1623,7 @@ class Music(commands.Cog):
             return
         st, vc = res
         if not vc.is_paused():
-            return await ctx.send(embed=warn_embed("گۆرانییەکە وەستێنراو نییە."), delete_after=8)
+            return await ctx.send(embed=warn_embed("گۆرانی ڕانەوەستیایە."), delete_after=8)
         self.toggle_pause(st, vc)
         await self.refresh_message(ctx.guild)
         await ctx.message.add_reaction("▶️")
@@ -1644,7 +1644,7 @@ class Music(commands.Cog):
         if not res:
             return
         await self.destroy(ctx.guild)
-        await ctx.send(embed=warn_embed("⏹️ میوزیک ڕاگیرا و بوت چووە دەرەوە."))
+        await ctx.send(embed=warn_embed("⏹️ میوزیک ڕاوەستیا و بوت چوو دەر."))
 
     # z loop [off/song/queue]
     @commands.command(name="loop", aliases=["repeat"])
@@ -1659,7 +1659,7 @@ class Music(commands.Cog):
             return await ctx.send(embed=error_embed(f"`{PREFIX} loop` ‧ `{PREFIX} loop song` ‧ `{PREFIX} loop queue` ‧ `{PREFIX} loop off`"), delete_after=10)
         st.loop = new_mode
         await self.refresh_message(ctx.guild)
-        await ctx.send(embed=ok_embed("🔁 دووبارەکردنەوە", f"دۆخ: **{LOOP_TEXT[st.loop]}**", ctx=ctx))
+        await ctx.send(embed=ok_embed("🔁 دوبارەکرنەڤە", f"دۆخ: **{LOOP_TEXT[st.loop]}**", ctx=ctx))
 
     # z volume [1-150]
     @commands.command(name="volume", aliases=["vol", "v"])
@@ -1669,12 +1669,12 @@ class Music(commands.Cog):
             return
         st, vc = res
         if amount is None:
-            return await ctx.send(embed=ok_embed("🔊 دەنگ", f"ئێستا: **{int(st.volume * 100)}%**", ctx=ctx))
+            return await ctx.send(embed=ok_embed("🔊 دەنگ", f"نوکە: **{int(st.volume * 100)}%**", ctx=ctx))
         if not 1 <= amount <= int(MAX_VOLUME * 100):
-            return await ctx.send(embed=error_embed(f"ژمارەیەک لە نێوان `1` و `{int(MAX_VOLUME * 100)}` بنووسە."), delete_after=8)
+            return await ctx.send(embed=error_embed(f"ژمارەکێ د ناڤبەرا `1` و `{int(MAX_VOLUME * 100)}` دا بنڤیسە."), delete_after=8)
         self.set_volume(vc, st, amount / 100)
         await self.refresh_message(ctx.guild)
-        await ctx.send(embed=ok_embed("🔊 دەنگ گۆڕدرا", f"**{int(st.volume * 100)}%**", ctx=ctx))
+        await ctx.send(embed=ok_embed("🔊 دەنگ هاتە گوهۆڕین", f"**{int(st.volume * 100)}%**", ctx=ctx))
 
     # z shuffle
     @commands.command(name="shuffle", aliases=["mix"])
@@ -1684,17 +1684,17 @@ class Music(commands.Cog):
             return
         st, _ = res
         if len(st.queue) < 2:
-            return await ctx.send(embed=warn_embed("پێویستە لانی کەم ٢ گۆرانی لە ڕیزبەندیدا بێت."), delete_after=8)
+            return await ctx.send(embed=warn_embed("پێدڤییە لانیکەم ٢ گۆرانی د ڕیزێ دا هەبن."), delete_after=8)
         random.shuffle(st.queue)
         await self.refresh_message(ctx.guild)
-        await ctx.send(embed=ok_embed("🔀 ڕیزبەندی تێکەڵ کرا", f"**{len(st.queue)}** گۆرانی", ctx=ctx))
+        await ctx.send(embed=ok_embed("🔀 ڕیز هاتە تێکەلکرن", f"**{len(st.queue)}** گۆرانی", ctx=ctx))
 
-    # z queue [پەڕە]
+    # z queue [لاپەڕە]
     @commands.command(name="queue", aliases=["q", "list"])
     async def queue_cmd(self, ctx, page: int = 1):
         st = self.states.get(ctx.guild.id)
         if not st or (not st.current and not st.queue):
-            return await ctx.send(embed=warn_embed(f"هیچ شتێک نییە. `{PREFIX} play <ناو>` بنووسە."), delete_after=8)
+            return await ctx.send(embed=warn_embed(f"چ تشت نینن. `{PREFIX} play <ناڤ>` بنڤیسە."), delete_after=8)
         view = QueueView(self, ctx.guild.id, page - 1)
         await ctx.send(embed=view.build(), view=view)
 
@@ -1703,7 +1703,7 @@ class Music(commands.Cog):
     async def nowplaying(self, ctx):
         st = self.states.get(ctx.guild.id)
         if not st or not st.current:
-            return await ctx.send(embed=warn_embed("هیچ گۆرانییەک نالێدرێت."), delete_after=8)
+            return await ctx.send(embed=warn_embed("چ گۆرانی ناهێنە لێدان."), delete_after=8)
         await ctx.send(embed=self.now_embed(ctx.guild, st))
 
     # z removesong <ژمارە>
@@ -1714,9 +1714,9 @@ class Music(commands.Cog):
             return
         st, _ = res
         if not 1 <= number <= len(st.queue):
-            return await ctx.send(embed=error_embed(f"ژمارەیەک لە نێوان `1` و `{len(st.queue)}` بنووسە."), delete_after=8)
+            return await ctx.send(embed=error_embed(f"ژمارەکێ د ناڤبەرا `1` و `{len(st.queue)}` دا بنڤیسە."), delete_after=8)
         track = st.queue.pop(number - 1)
-        await ctx.send(embed=ok_embed("🗑️ لابرا لە ڕیزبەندی", f"[{trim(track.title, 80)}]({track.url})", ctx=ctx))
+        await ctx.send(embed=ok_embed("🗑️ ژ ڕیزێ هاتە لابرن", f"[{trim(track.title, 80)}]({track.url})", ctx=ctx))
 
     # z clearqueue
     @commands.command(name="clearqueue", aliases=["cq"])
@@ -1728,7 +1728,7 @@ class Music(commands.Cog):
         count = len(st.queue)
         st.queue.clear()
         await self.refresh_message(ctx.guild)
-        await ctx.send(embed=ok_embed("🧹 ڕیزبەندی پاک کرایەوە", f"**{count}** گۆرانی لابرا.", ctx=ctx))
+        await ctx.send(embed=ok_embed("🧹 ڕیز هاتە پاقژکرن", f"**{count}** گۆرانی هاتنە لابرن.", ctx=ctx))
 
     # z previous
     @commands.command(name="previous", aliases=["prev", "back"])
@@ -1747,7 +1747,7 @@ class Music(commands.Cog):
             return
         st, _ = res
         if not 1 <= number <= len(st.queue):
-            return await ctx.send(embed=error_embed(f"ژمارەیەک لە نێوان `1` و `{len(st.queue)}` بنووسە."), delete_after=8)
+            return await ctx.send(embed=error_embed(f"ژمارەکێ د ناڤبەرا `1` و `{len(st.queue)}` دا بنڤیسە."), delete_after=8)
         self.do_jump(ctx.guild, st.queue[number - 1])
         await ctx.message.add_reaction("🎯")
 
@@ -1768,61 +1768,61 @@ class Music(commands.Cog):
 
     # ═══ کتێبخانە: z playlist / z like / z recent ═══
 
-    # z playlist ─ داشبۆردی کتێبخانە
+    # z playlist ─ داشبۆردا کتێبخانێ
     @commands.group(name="playlist", aliases=["pl", "playlists", "library", "lib"], invoke_without_command=True)
     async def playlist(self, ctx):
         view = DashboardView(self, ctx.author)
         view.message = await ctx.send(embed=view.build(), view=view)
 
-    # z pl create <ناو>
+    # z pl create <ناڤ>
     @playlist.command(name="create", aliases=["new"])
     async def pl_create(self, ctx, *, name: str):
         res = lib_create(ctx.author.id, name)
         if res != "ok":
             return await ctx.send(embed=error_embed(CREATE_ERRORS[res], ctx=ctx), delete_after=10)
-        await ctx.send(embed=ok_embed("🎼 لیستەکە دروست بوو", f"**{discord.utils.escape_markdown(' '.join(name.split())[:MAX_PLAYLIST_NAME])}**\n"
-                                       f"گۆرانییەک لێبدە و 💾 دابگرە، یان `{PREFIX} pl add <ناو>` بنووسە.", ctx=ctx))
+        await ctx.send(embed=ok_embed("🎼 لیست هاتە چێکرن", f"**{discord.utils.escape_markdown(' '.join(name.split())[:MAX_PLAYLIST_NAME])}**\n"
+                                       f"گۆرانیەکێ لێدە و 💾 بگوشە، یان `{PREFIX} pl add <ناڤ>` بنڤیسە.", ctx=ctx))
 
-    # z pl delete <ناو/ژمارە>
+    # z pl delete <ناڤ/ژمارە>
     @playlist.command(name="delete", aliases=["del"])
     async def pl_delete(self, ctx, *, ref: str):
         r = lib_resolve(ctx.author.id, ref)
         if r is None or r.kind != "playlist":
-            return await ctx.send(embed=error_embed("ئەو لیستە نەدۆزرایەوە (Favorites/Recent ناسڕێنەوە)."), delete_after=10)
+            return await ctx.send(embed=error_embed("ئەو لیست نەهاتە دیتن (Favorites/Recent ناهێنە ژێبرن)."), delete_after=10)
         lib_delete(r.id)
-        await ctx.send(embed=ok_embed("🗑️ لیستەکە سڕایەوە", f"**{discord.utils.escape_markdown(r.name)}**", ctx=ctx))
+        await ctx.send(embed=ok_embed("🗑️ لیست هاتە ژێبرن", f"**{discord.utils.escape_markdown(r.name)}**", ctx=ctx))
 
-    # z pl add <ناو/ژمارە/fav> ─ گۆرانی ئێستا دەخاتە ناو لیست
+    # z pl add <ناڤ/ژمارە/fav> ─ گۆرانیا نوکە دکەتە ناڤ لیستێ
     @playlist.command(name="add")
     async def pl_add(self, ctx, *, ref: str):
         st = self.states.get(ctx.guild.id)
         if not st or not st.current:
-            return await ctx.send(embed=error_embed("هیچ گۆرانییەک نالێدرێت بۆ زیادکردن."), delete_after=8)
+            return await ctx.send(embed=error_embed("چ گۆرانی ناهێنە لێدان بۆ زێدەکرنێ."), delete_after=8)
         r = lib_resolve(ctx.author.id, ref)
         if r is None or r.kind == "recent":
-            return await ctx.send(embed=error_embed(f"ئەو لیستە نەدۆزرایەوە. `{PREFIX} playlist` ببینە."), delete_after=10)
+            return await ctx.send(embed=error_embed(f"ئەو لیست نەهاتە دیتن. `{PREFIX} playlist` ببینە."), delete_after=10)
         res = lib_add(r.id, st.current)
         await ctx.send(embed=ok_embed(r.title, f"{ADD_TEXT[res]}\n[{trim(st.current.title, 80)}]({st.current.url})", ctx=ctx))
 
-    # z pl remove <ناو/ژمارەی لیست> <ژمارەی گۆرانی>
+    # z pl remove <ناڤ/ژمارا لیستێ> <ژمارا گۆرانیێ>
     @playlist.command(name="remove", aliases=["rm"])
     async def pl_remove(self, ctx, *, args: str):
         parts = args.rsplit(None, 1)
         if len(parts) != 2 or not parts[1].isdigit():
-            return await ctx.send(embed=error_embed(f"`{PREFIX} pl remove <ناوی لیست> <ژمارەی گۆرانی>`"), delete_after=10)
+            return await ctx.send(embed=error_embed(f"`{PREFIX} pl remove <ناڤێ لیستێ> <ژمارا گۆرانیێ>`"), delete_after=10)
         r = lib_resolve(ctx.author.id, parts[0])
         if r is None or r.kind == "recent":
-            return await ctx.send(embed=error_embed("ئەو لیستە نەدۆزرایەوە."), delete_after=10)
+            return await ctx.send(embed=error_embed("ئەو لیست نەهاتە دیتن."), delete_after=10)
         title = lib_remove_track(r.id, int(parts[1]))
         if title is None:
-            return await ctx.send(embed=error_embed("ئەو ژمارەیە لە لیستەکەدا نییە."), delete_after=10)
-        await ctx.send(embed=ok_embed("🗑️ لابرا", f"**{trim(title, 80)}** لە {r.title}", ctx=ctx))
+            return await ctx.send(embed=error_embed("ئەو ژمارە د لیستێ دا نینە."), delete_after=10)
+        await ctx.send(embed=ok_embed("🗑️ هاتە لابرن", f"**{trim(title, 80)}** ژ {r.title}", ctx=ctx))
 
-    # z pl play <ناو/ژمارە> / z pl shuffle <ناو/ژمارە>
+    # z pl play <ناڤ/ژمارە> / z pl shuffle <ناڤ/ژمارە>
     async def _pl_play(self, ctx, ref, shuffle):
         r = lib_resolve(ctx.author.id, ref)
         if r is None:
-            return await ctx.send(embed=error_embed(f"ئەو لیستە نەدۆزرایەوە. `{PREFIX} playlist` ببینە."), delete_after=10)
+            return await ctx.send(embed=error_embed(f"ئەو لیست نەهاتە دیتن. `{PREFIX} playlist` ببینە."), delete_after=10)
         await self.enqueue_saved(ctx.guild, ctx.channel, ctx.author, lib_tracks(r), shuffle=shuffle, label=r.title)
 
     @playlist.command(name="play", aliases=["p"])
@@ -1833,26 +1833,26 @@ class Music(commands.Cog):
     async def pl_shuffle(self, ctx, *, ref: str):
         await self._pl_play(ctx, ref, True)
 
-    # z pl view <ناو/ژمارە>
+    # z pl view <ناڤ/ژمارە>
     @playlist.command(name="view", aliases=["open", "show"])
     async def pl_view(self, ctx, *, ref: str):
         r = lib_resolve(ctx.author.id, ref)
         if r is None:
-            return await ctx.send(embed=error_embed(f"ئەو لیستە نەدۆزرایەوە. `{PREFIX} playlist` ببینە."), delete_after=10)
+            return await ctx.send(embed=error_embed(f"ئەو لیست نەهاتە دیتن. `{PREFIX} playlist` ببینە."), delete_after=10)
         view = ListView(self, ctx.author, r)
         view.message = await ctx.send(embed=view.build(), view=view)
 
-    # z like ─ گۆرانی ئێستا دەخاتە / لادەبات لە ❤️ Favorites
+    # z like ─ گۆرانیا نوکە دکەتە / لادبەت ژ ❤️ Favorites
     @commands.command(name="like", aliases=["love"])
     async def like(self, ctx):
         st = self.states.get(ctx.guild.id)
         if not st or not st.current:
-            return await ctx.send(embed=error_embed("هیچ گۆرانییەک نالێدرێت."), delete_after=8)
+            return await ctx.send(embed=error_embed("چ گۆرانی ناهێنە لێدان."), delete_after=8)
         res = lib_toggle_fav(ctx.author.id, st.current)
-        title = {"added": "❤️ زیاد کرا بۆ Favorites", "removed": "💔 لە Favorites لابرا", "full": "❌ Favorites پڕە"}[res]
+        title = {"added": "❤️ هاتە زێدەکرن بۆ Favorites", "removed": "💔 ژ Favorites هاتە لابرن", "full": "❌ Favorites تژییە"}[res]
         await ctx.send(embed=ok_embed(title, f"[{trim(st.current.title, 80)}]({st.current.url})", ctx=ctx))
 
-    # z likes ─ لیستی Favorites
+    # z likes ─ لیستا Favorites
     @commands.command(name="likes", aliases=["favs", "favorites"])
     async def likes(self, ctx):
         view = ListView(self, ctx.author, LibRef("fav", lib_fav_id(ctx.author.id), FAV_TITLE, ctx.author.id))
@@ -1868,15 +1868,15 @@ class Music(commands.Cog):
     @commands.command(name="menu", aliases=["songs", "artists"])
     async def menu(self, ctx):
         if not ctx.author.voice:
-            return await ctx.send(embed=error_embed("سەرەتا بچۆ ناو ڤۆیسێک."), delete_after=8)
+            return await ctx.send(embed=error_embed("سەرەتا بچە ناڤ ڤۆیسەکێ."), delete_after=8)
         artists = "\n".join(f"🎙️ **{d['name']}** ─ `{len(d['songs'])}` گۆرانی" for d in ARTISTS_DATA.values())
         embed = make_embed(
             "🎶 Zero Music ─ داشبۆرد",
             (
-                f"👋 سڵاو **{discord.utils.escape_markdown(ctx.author.display_name)}**!\n"
-                f"هونەرمەندێک لە خوارەوە هەڵبژێرە و گۆرانییەکەی لێبدە.\n\n"
+                f"👋 سلاڤ **{discord.utils.escape_markdown(ctx.author.display_name)}**!\n"
+                f"هونەرمەندەکێ ل خوارێ هەلبژێرە و گۆرانیا وی لێدە.\n\n"
                 f"{'─' * 18}\n{artists}\n{'─' * 18}\n\n"
-                f"💡 یان ڕاستەوخۆ: `{PREFIX} play <ناو یان لینکی YouTube/TikTok>`"
+                f"💡 یان ڕاستەخۆ: `{PREFIX} play <ناڤ یان لینکێ YouTube/TikTok>`"
             ),
             color=PURPLE,
             ctx=ctx,
