@@ -64,6 +64,8 @@ async def setup_hook():
     await bot.load_extension("cogs.hunt")     # ڕاوکردن: hunt, zoo, sell, huntbot, gems, lootbox...)
     await bot.load_extension("cogs.bank")     #system bank
     await bot.load_extension("cogs.music")    #music system 
+    await bot.load_extension("cogs.cards")        # کارتی ئەنیمی: سندوق، کڕین، مارکێت
+    await bot.load_extension("cogs.card_battle")  # جەنگی کارتەکان
 
 bot.setup_hook = setup_hook
 
