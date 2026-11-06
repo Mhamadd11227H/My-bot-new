@@ -15,7 +15,12 @@ from discord.ext import commands
 
 from database import db, get_balance, spend_coins, add_coins, transfer_coins
 from utils import make_embed, PREFIX, CURRENCY, CASH_EMOJI, ERROR, SUCCESS, WARN
-from cards_data import ANIME_CHARACTERS, RARITY_CONFIG, CHEST_CONFIG, DEFAULT_IMAGE
+import cards_data as _data
+ANIME_CHARACTERS = _data.ANIME_CHARACTERS
+RARITY_CONFIG = _data.RARITY_CONFIG
+CHEST_CONFIG = _data.CHEST_CONFIG
+# ئەگەر لە cards_data.py نەبوو، ئەم وێنە کاتییە بەکاردێت
+DEFAULT_IMAGE = getattr(_data, "DEFAULT_IMAGE", "https://i.giphy.com/media/C3brYLms1bhv2/giphy.gif")
 
 # ═══════════════════════════════════════
 # بەشی ١: ڕێکخستنەکان (لێرە دەستکاری بکە)
@@ -128,7 +133,16 @@ _DEFAULT_RARITY = {"emoji": "🎴", "color": BLUE, "stars": 1, "base_power": 100
 
 
 def rarity_info(rarity):
-    return RARITY_CONFIG.get(rarity, _DEFAULT_RARITY)
+    """زانیاری جۆر. ئەو خانانەی لە cards_data.py نەبن (وەک stars) خۆکار پڕ دەکرێنەوە"""
+    conf = RARITY_CONFIG.get(rarity)
+    info = dict(_DEFAULT_RARITY)
+    if conf:
+        info.update(conf)
+        if "stars" not in conf:
+            n = len(RARITY_ORDER)
+            idx = RARITY_ORDER.index(rarity)
+            info["stars"] = 1 + round(idx * 4 / (n - 1)) if n > 1 else 1
+    return info
 
 
 def find_char(char_id):
